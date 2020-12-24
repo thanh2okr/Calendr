@@ -1,0 +1,157 @@
+/* 
+  Localizable.strings
+  Calendr
+
+  Created by Gustav (git-ansik) on 20/07/2024.
+*/
+
+"quit" = "Avsluta";
+"search" = "Sök";
+
+"access_required.calendars" = "Kalender avvaktar 'Full tillgång' auktorisation";
+"access_required.reminders" = "Påminnelser i väntan på auktorisation";
+"access_required.open_settings" = "Öppna Inställningar";
+"access_required.cancel" = "Avbryt";
+
+"auto_update.check_for_updates" = "Sök efter uppdateringar";
+"auto_update.fetching_releases" = "Hämtning av releaser";
+"auto_update.new_version" = "Ny version tillgänglig på: %@";
+"auto_update.updated_to" = "Uppdaterad till version %@";
+"auto_update.downloading" = "Ladda ner version %@";
+"auto_update.install" = "Installera";
+"auto_update.replace.message" = "Bekräfta appens plats så att vi har tillstånd att ersätta den";
+//"auto_update.replace.error" = "You must not change the installation directory";
+
+//"auto_update.failed.check" = "Failed to check for update";
+//"auto_update.failed.download" = "Failed to download update";
+//"auto_update.failed.install" = "Failed to install update";
+
+//"attachments.open.message" = "Calendr needs permission to access your attachments";
+//"attachments.open.authorize" = "Authorize access to attachments";
+
+"settings.title" = "Inställningar";
+"settings.tab.general" = "Allmänt";
+"settings.tab.appearance" = "Utseende";
+"settings.tab.calendars" = "Kalendrar";
+"settings.tab.keyboard" = "Genvägar";
+"settings.tab.about" = "Om";
+
+"settings.menu_bar" = "Menyrad";
+"settings.menu_bar.auto_launch" = "Öppna vid inloggning";
+"settings.menu_bar.show_icon" = "Visa ikon";
+"settings.menu_bar.show_date" = "Visa datum";
+"settings.menu_bar.show_background" = "Show ogenomskinlig bakgrund";
+"settings.menu_bar.date_format_custom" = "Anpassad";
+//"settings.menu_bar.open_on_hover" = "Open on mouse hover";
+
+"settings.next_event" = "Nästa händelse";
+"settings.next_event.show_next_event" = "Visa nästa händelse";
+"settings.next_event.grab_attention" = "Fånga uppmärksamheten när evenemanget är nära";
+"settings.next_event.grab_attention.flashing" = "Blinkande";
+"settings.next_event.grab_attention.sound" = "Spela ljud";
+"settings.next_event.detect_notch" = "Korta om 'notch' finns";
+
+"settings.calendar" = "Kalender";
+//"settings.calendar.show_month_outline" = "Show month outline";
+"settings.calendar.show_week_numbers" = "Visa veckonummer";
+"settings.calendar.preserve_selected_date" = "Bevara valt datum när gömd";
+"settings.calendar.show_declined_events" = "Visa avböjda händelser";
+"settings.calendar.show_declined_events_tooltip" = "Detta fungerar bara om det också är aktiverat i den inbyggda kalenderappen.";
+"settings.calendar.date_hover_option" = "Håll in ⌥ för att titta på datum i muspekaren";
+//"settings.calendar.week_count" = "Visible weeks";
+"settings.calendar.calendar_app_view_mode" = "Kalenderappens vy";
+//"settings.calendar.default_calendar_app" = "Default calendar app";
+
+//"settings.calendar.event_dots" = "Event dots";
+//"settings.calendar.event_dots.none" = "none";
+//"settings.calendar.event_dots.single_neutral" = "neutral";
+//"settings.calendar.event_dots.single_highlighted" = "highlighted";
+//"settings.calendar.event_dots.multiple" = "multiple";
+
+"settings.events" = "Händelser";
+"settings.events.show_map" = "Visa karta och väder";
+"settings.events.show_overdue_reminders" = "Visa påminnelser om förseningar";
+//"settings.events.show_all_day_details" = "Show all-day events details";
+"settings.events.show_finished_events" = "Visa avslutade händelser";
+"settings.events.show_recurrence_indicator" = "Visa återfallsindikator";
+"settings.events.force_local_time_zone" = "Visa alla händelser i den lokala tidszonen";
+//"settings.events.show_event_list_summary" = "Show event list summary";
+//"settings.events.show_future_events" = "Show future events";
+//"settings.events.show_video_call_only" = "Show video call events only";
+//"settings.events.max_title_lines" = "Max title lines";
+
+"settings.appearance.transparency" = "Transparens";
+"settings.appearance.accessibility" = "Tillgänglighet";
+
+"settings.keyboard.local_shortcuts.title" = "Lokala genvägar";
+"settings.keyboard.local_shortcuts.prev_date" = "Föregående datum";
+"settings.keyboard.local_shortcuts.next_date" = "Nästa datum";
+"settings.keyboard.local_shortcuts.prev_week" = "Föregående vecka";
+"settings.keyboard.local_shortcuts.next_week" = "Nästa vecka";
+"settings.keyboard.local_shortcuts.prev_month" = "Föregående månad";
+"settings.keyboard.local_shortcuts.next_month" = "Nästa månad";
+"settings.keyboard.local_shortcuts.curr_date" = "Aktuellt datum";
+"settings.keyboard.local_shortcuts.open_date" = "Öppna valt datum";
+"settings.keyboard.local_shortcuts.pin_calendar" = "Fäst kalender";
+
+"settings.keyboard.global_shortcuts.title" = "Globala genvägar";
+"settings.keyboard.global_shortcuts.open_calendar" = "Öppna kalender";
+"settings.keyboard.global_shortcuts.open_next_event" = "Öppna nästa händelse";
+"settings.keyboard.global_shortcuts.open_next_event_options" = "Nästa händelsealternativ";
+"settings.keyboard.global_shortcuts.open_next_reminder" = "Öppna nästa påminnelse";
+"settings.keyboard.global_shortcuts.open_next_reminder_options" = "Nästa påminnelsealternativ";
+
+"formatter.date.today" = "Idag";
+"formatter.date.relative.in" = "om %@";
+"formatter.date.relative.ago" = "%@ sedan";
+"formatter.date.relative.left" = "%@ kvar";
+
+//"formatter.events.plural" = "%@ events";
+//"formatter.reminders.plural" = "%@ reminders";
+
+//"reminder.status.overdue" = "Overdue";
+
+"reminder.options.button" = "Alternativ";
+"reminder.options.complete" = "Klar";
+"reminder.options.remind" = "Påminn %@";
+
+//"reminder.editor.headline" = "New Reminder";
+//"reminder.editor.title" = "Title";
+//"reminder.editor.save" = "Save";
+
+//"reminder.editor.confirm.continue" = "Continue editing";
+//"reminder.editor.confirm.discard" = "Discard all changes";
+
+//"map_black_list.headline" = "Hide map if location contains any of these words";
+//"map_black_list.new_item_text" = "New Item";
+
+"event.details.participant.organizer" = "arrangören";
+"event.details.participant.me" = "jag";
+
+"event.all_day" = "Heldag";
+
+"event.status.accepted" = "Godkänd";
+"event.status.maybe" = "Kanske";
+"event.status.declined" = "Avböjd";
+"event.status.pending" = "Väntande";
+
+"event.action.open" = "Öppna";
+"event.action.join" = "Gå med";
+"event.action.skip" = "Skippa";
+"event.action.accept" = "Tacka ja";
+"event.action.maybe" = "Kanske";
+"event.action.decline" = "Avböj";
+
+"event_list.summary.agenda" = "Idag";
+
+"tooltips.navigation.prev_month" = "Föregående månad";
+"tooltips.navigation.today" = "Idag";
+"tooltips.navigation.next_month" = "Nästa månad";
+
+"tooltips.toolbar.stay_open" = "Håll öppet";
+//"tooltips.toolbar.create" = "Create";
+"tooltips.toolbar.open_calendar" = "Öppen Kalender";
+"tooltips.toolbar.open_reminders" = "Öppna Påminnelser";
+"tooltips.toolbar.open_menu" = "Öppna menyn";
+
+"calendars.source.others" = "Övriga";

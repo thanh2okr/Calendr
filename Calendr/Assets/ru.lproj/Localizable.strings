@@ -1,0 +1,159 @@
+/* 
+  Localizable.strings
+  Calendr
+
+  Created by Petros Dhespollari on 08/02/2025.
+  Updated by Pavel Bychko on 08/02/2025.
+  Updated by Roman Kolosov on 10/11/2025.
+*/
+
+"quit" = "Выход";
+"search" = "Поиск";
+
+"access_required.calendars" = "Требуется доступ к Календарю (полный доступ)";
+"access_required.reminders" = "Требуется доступ к Напоминаниям";
+"access_required.open_settings" = "Открыть настройки";
+"access_required.cancel" = "Отмена";
+
+"auto_update.check_for_updates" = "Проверить наличие обновлений";
+"auto_update.fetching_releases" = "Получение сведений о версиях";
+"auto_update.new_version" = "Доступна новая версия: %@";
+"auto_update.updated_to" = "Обновлено до версии %@";
+"auto_update.downloading" = "Загрузка версии %@";
+"auto_update.install" = "Установить";
+"auto_update.replace.message" = "Подтвердите расположение приложения, чтобы получить разрешение на его замену";
+"auto_update.replace.error" = "Не изменяйте каталог установки";
+
+"auto_update.failed.check" = "Не удалось проверить наличие обновлений";
+"auto_update.failed.download" = "Не удалось загрузить обновление";
+"auto_update.failed.install" = "Не удалось установить обновление";
+
+"attachments.open.message" = "Приложению Calendr нужно разрешение на доступ к вложениям";
+"attachments.open.authorize" = "Разрешить доступ к вложениям";
+
+"settings.title" = "Настройки";
+"settings.tab.general" = "Общие";
+"settings.tab.appearance" = "Внешний вид";
+"settings.tab.calendars" = "Календари";
+"settings.tab.keyboard" = "Горячие клавиши";
+"settings.tab.about" = "О приложении";
+
+"settings.menu_bar" = "Панель меню";
+"settings.menu_bar.auto_launch" = "Запуск при входе в систему";
+"settings.menu_bar.show_icon" = "Показывать иконку";
+"settings.menu_bar.show_date" = "Показывать дату";
+"settings.menu_bar.show_background" = "Показывать непрозрачный фон";
+"settings.menu_bar.date_format_custom" = "Задать формат";
+"settings.menu_bar.open_on_hover" = "Открыть при наведении мыши";
+
+"settings.next_event" = "Следующее событие";
+"settings.next_event.show_next_event" = "Показывать следующее событие";
+"settings.next_event.grab_attention" = "Оповещать о приближающемся событии";
+"settings.next_event.grab_attention.flashing" = "Миганием";
+"settings.next_event.grab_attention.sound" = "Звуком";
+"settings.next_event.detect_notch" = "Сокращать, если есть вырез (notch)";
+
+"settings.calendar" = "Календарь";
+//"settings.calendar.show_month_outline" = "Show month outline";
+"settings.calendar.show_week_numbers" = "Показывать номер недели";
+"settings.calendar.preserve_selected_date" = "Сохранять выбранную дату при скрытии";
+"settings.calendar.show_declined_events" = "Показывать отклоненные события";
+"settings.calendar.show_declined_events_tooltip" = "Это работает только в том случае, если он также включен в родном приложении Календарь.";
+"settings.calendar.date_hover_option" = "Удерживайте ⌥, чтобы просмотреть наведенные даты.";
+"settings.calendar.week_count" = "Видимые недели";
+"settings.calendar.calendar_app_view_mode" = "Просмотр приложения «Календарь»";
+"settings.calendar.default_calendar_app" = "Приложение календаря по умолчанию";
+
+"settings.calendar.event_dots" = "Индикаторы событий";
+"settings.calendar.event_dots.none" = "отключены";
+"settings.calendar.event_dots.single_neutral" = "обычные";
+"settings.calendar.event_dots.single_highlighted" = "акцентные";
+"settings.calendar.event_dots.multiple" = "многоцветные";
+
+"settings.events" = "События";
+"settings.events.show_map" = "Показывать карту и погоду";
+"settings.events.show_overdue_reminders" = "Показывать просроченные напоминания";
+"settings.events.show_all_day_details" = "Показать подробности событий на весь день";
+"settings.events.show_finished_events" = "Показывать завершенные события";
+"settings.events.show_recurrence_indicator" = "Показывать индикатор повторения";
+"settings.events.force_local_time_zone" = "Показывать все события в местном часовом поясе";
+//"settings.events.show_event_list_summary" = "Show event list summary";
+//"settings.events.show_future_events" = "Show future events";
+//"settings.events.show_video_call_only" = "Show video call events only";
+//"settings.events.max_title_lines" = "Max title lines";
+
+"settings.appearance.transparency" = "Прозрачность";
+"settings.appearance.accessibility" = "Доступность";
+
+"settings.keyboard.local_shortcuts.title" = "Локальные горячие клавиши";
+"settings.keyboard.local_shortcuts.prev_date" = "Предыдущая дата";
+"settings.keyboard.local_shortcuts.next_date" = "Следующая дата";
+"settings.keyboard.local_shortcuts.prev_week" = "Предыдущая неделя";
+"settings.keyboard.local_shortcuts.next_week" = "Следующая неделя";
+"settings.keyboard.local_shortcuts.prev_month" = "Предыдущий месяц";
+"settings.keyboard.local_shortcuts.next_month" = "Следующий месяц";
+"settings.keyboard.local_shortcuts.curr_date" = "Текущая дата";
+"settings.keyboard.local_shortcuts.open_date" = "Открыть выбранную дату";
+"settings.keyboard.local_shortcuts.pin_calendar" = "Прикрепить календарь";
+
+"settings.keyboard.global_shortcuts.title" = "Глобальные горячие клавиши";
+"settings.keyboard.global_shortcuts.open_calendar" = "Открыть календарь";
+"settings.keyboard.global_shortcuts.open_next_event" = "Открыть следующее событие";
+"settings.keyboard.global_shortcuts.open_next_event_options" = "Открыть настройки следующего события";
+"settings.keyboard.global_shortcuts.open_next_reminder" = "Открыть следующее напоминание";
+"settings.keyboard.global_shortcuts.open_next_reminder_options" = "Открыть настройки следующего напоминания";
+
+"formatter.date.today" = "Сегодня";
+"formatter.date.relative.in" = "через %@";
+"formatter.date.relative.ago" = "%@ назад";
+"formatter.date.relative.left" = "осталось %@";
+
+//"formatter.events.plural" = "%@ events";
+//"formatter.reminders.plural" = "%@ reminders";
+
+"reminder.status.overdue" = "Просрочено";
+
+"reminder.options.button" = "Опции";
+"reminder.options.complete" = "Выполнено";
+"reminder.options.remind" = "Напомнить %@";
+
+"reminder.editor.headline" = "Новое Напоминание";
+"reminder.editor.title" = "Название";
+"reminder.editor.save" = "Сохранить";
+
+"reminder.editor.confirm.continue" = "Продолжить редактирование";
+"reminder.editor.confirm.discard" = "Отменить все изменения";
+
+"map_black_list.headline" = "Скрывать карту, если в названии места есть одно из этих слов";
+"map_black_list.new_item_text" = "Новый элемент";
+
+"event.details.participant.organizer" = "организатор";
+"event.details.participant.me" = "я";
+
+"event.all_day" = "Весь день";
+
+"event.status.accepted" = "Принято";
+"event.status.maybe" = "Возможно";
+"event.status.declined" = "Отклонено";
+"event.status.pending" = "В ожидании";
+
+"event.action.open" = "Открыть";
+"event.action.join" = "Присоединиться";
+"event.action.skip" = "Пропустить";
+"event.action.accept" = "Принять";
+"event.action.maybe" = "Возможно";
+"event.action.decline" = "Отклонить";
+
+"event_list.summary.agenda" = "Сегодня";
+
+"tooltips.navigation.prev_month" = "Предыдущий месяц";
+"tooltips.navigation.today" = "Сегодня";
+"tooltips.navigation.next_month" = "Следующий месяц";
+
+"tooltips.toolbar.stay_open" = "Оставить открытым";
+"tooltips.toolbar.create" = "Создать";
+"tooltips.toolbar.open_calendar" = "Открыть календарь";
+"tooltips.toolbar.open_reminders" = "Открыть напоминания";
+"tooltips.toolbar.open_menu" = "Открыть меню";
+
+"calendars.source.others" = "Другие";

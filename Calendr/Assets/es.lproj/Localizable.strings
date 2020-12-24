@@ -1,0 +1,157 @@
+/* 
+  Localizable.strings
+  Calendr
+
+  Created by Guillermo (gferreroferri) on 22/02/2021.
+*/
+
+"quit" = "Salir";
+"search" = "Buscar";
+
+"access_required.calendars" = "Calendario pendiente de autorización de 'Acceso completo'";
+"access_required.reminders" = "Recordatorios pendientes de autorización";
+"access_required.open_settings" = "Abrir configuración";
+"access_required.cancel" = "Cancelar";
+
+"auto_update.check_for_updates" = "Buscar actualizaciones";
+"auto_update.fetching_releases" = "Obteniendo versiones";
+"auto_update.new_version" = "Nueva versión disponible: %@";
+"auto_update.updated_to" = "Actualizado a la versión %@";
+"auto_update.downloading" = "Descargando la versión %@";
+"auto_update.install" = "Instalar";
+"auto_update.replace.message" = "Confirmar la ubicación de la aplicación para que tengamos permiso para reemplazarla";
+//"auto_update.replace.error" = "You must not change the installation directory";
+
+//"auto_update.failed.check" = "Failed to check for update";
+//"auto_update.failed.download" = "Failed to download update";
+//"auto_update.failed.install" = "Failed to install update";
+
+//"attachments.open.message" = "Calendr needs permission to access your attachments";
+//"attachments.open.authorize" = "Authorize access to attachments";
+
+"settings.title" = "Preferencias";
+"settings.tab.general" = "General";
+"settings.tab.appearance" = "Apariencia";
+"settings.tab.calendars" = "Calendarios";
+"settings.tab.keyboard" = "Atajos";
+"settings.tab.about" = "Acerca de";
+
+"settings.menu_bar" = "Barra de menús";
+"settings.menu_bar.auto_launch" = "Comenzar al iniciar sesión";
+"settings.menu_bar.show_icon" = "Mostrar icono";
+"settings.menu_bar.show_date" = "Mostrar fecha";
+"settings.menu_bar.show_background" = "Mostrar fondo opaco";
+"settings.menu_bar.date_format_custom" = "Personalizado";
+//"settings.menu_bar.open_on_hover" = "Open on mouse hover";
+
+"settings.next_event" = "Próximo evento";
+"settings.next_event.show_next_event" = "Mostrar próximo evento";
+"settings.next_event.grab_attention" = "Captar la atención cuando el acontecimiento está cerca";
+"settings.next_event.grab_attention.flashing" = "Intermitente";
+"settings.next_event.grab_attention.sound" = "Reproducir sonido";
+"settings.next_event.detect_notch" = "Acortar si 'notch' está presente";
+
+"settings.calendar" = "Calendario";
+//"settings.calendar.show_month_outline" = "Show month outline";
+"settings.calendar.show_week_numbers" = "Mostrar número de semana";
+"settings.calendar.preserve_selected_date" = "Conservar la fecha seleccionada al ocultar";
+"settings.calendar.show_declined_events" = "Mostrar eventos rechazados";
+"settings.calendar.show_declined_events_tooltip" = "Esto solo funciona si también está habilitado en la aplicación Calendario nativa.";
+"settings.calendar.date_hover_option" = "Mantén pulsado ⌥ para echar un vistazo a las fechas sobrevoladas";
+//"settings.calendar.week_count" = "Visible weeks";
+"settings.calendar.calendar_app_view_mode" = "Vista de la aplicación Calendario";
+//"settings.calendar.default_calendar_app" = "Default calendar app";
+
+//"settings.calendar.event_dots" = "Event dots";
+//"settings.calendar.event_dots.none" = "none";
+//"settings.calendar.event_dots.single_neutral" = "neutral";
+//"settings.calendar.event_dots.single_highlighted" = "highlighted";
+//"settings.calendar.event_dots.multiple" = "multiple";
+
+"settings.events" = "Eventos";
+"settings.events.show_map" = "Mostrar mapa y clima";
+"settings.events.show_overdue_reminders" = "Mostrar recordatorios atrasados";
+//"settings.events.show_all_day_details" = "Show all-day events details";
+"settings.events.show_finished_events" = "Mostrar eventos finalizados";
+"settings.events.show_recurrence_indicator" = "Mostrar indicador de recurrencia";
+"settings.events.force_local_time_zone" = "Mostrar todos los eventos en la zona horaria local";
+//"settings.events.show_event_list_summary" = "Show event list summary";
+//"settings.events.show_future_events" = "Show future events";
+//"settings.events.show_video_call_only" = "Show video call events only";
+//"settings.events.max_title_lines" = "Max title lines";
+
+"settings.appearance.transparency" = "Transparencia";
+"settings.appearance.accessibility" = "Accesibilidad";
+
+"settings.keyboard.local_shortcuts.title" = "Atajos locales";
+"settings.keyboard.local_shortcuts.prev_date" = "Fecha anterior";
+"settings.keyboard.local_shortcuts.next_date" = "Próxima fecha";
+"settings.keyboard.local_shortcuts.prev_week" = "Semana anterior";
+"settings.keyboard.local_shortcuts.next_week" = "Próxima semana";
+"settings.keyboard.local_shortcuts.prev_month" = "Mes anterior";
+"settings.keyboard.local_shortcuts.next_month" = "Próximo mes";
+"settings.keyboard.local_shortcuts.curr_date" = "Fecha actual";
+"settings.keyboard.local_shortcuts.open_date" = "Abrir fecha seleccionada";
+"settings.keyboard.local_shortcuts.pin_calendar" = "Fijar calendario";
+
+"settings.keyboard.global_shortcuts.title" = "Atajos globales";
+"settings.keyboard.global_shortcuts.open_calendar" = "Abrir calendario";
+"settings.keyboard.global_shortcuts.open_next_event" = "Abrir próximo evento";
+"settings.keyboard.global_shortcuts.open_next_event_options" = "Opciones del próximo evento";
+"settings.keyboard.global_shortcuts.open_next_reminder" = "Abrir próximo recordatorio";
+"settings.keyboard.global_shortcuts.open_next_reminder_options" = "Opciones del próximo recordatorio";
+
+"formatter.date.today" = "Hoy";
+"formatter.date.relative.in" = "en %@";
+"formatter.date.relative.ago" = "hace %@";
+"formatter.date.relative.left" = "%@ rest.";
+
+//"formatter.events.plural" = "%@ events";
+//"formatter.reminders.plural" = "%@ reminders";
+
+//"reminder.status.overdue" = "Overdue";
+
+"reminder.options.button" = "Opciones";
+"reminder.options.complete" = "Completado";
+"reminder.options.remind" = "Recordar %@";
+
+//"reminder.editor.headline" = "New Reminder";
+//"reminder.editor.title" = "Title";
+//"reminder.editor.save" = "Save";
+
+//"reminder.editor.confirm.continue" = "Continue editing";
+//"reminder.editor.confirm.discard" = "Discard all changes";
+
+//"map_black_list.headline" = "Hide map if location contains any of these words";
+//"map_black_list.new_item_text" = "New Item";
+
+"event.details.participant.organizer" = "organizador";
+"event.details.participant.me" = "me";
+
+"event.all_day" = "Todo el día";
+
+"event.status.accepted" = "Aceptado";
+"event.status.maybe" = "Quizá";
+"event.status.declined" = "Rechazado";
+"event.status.pending" = "Pendiente";
+
+"event.action.open" = "Abrir";
+"event.action.join" = "Unirse";
+"event.action.skip" = "Saltar";
+"event.action.accept" = "Aceptar";
+"event.action.maybe" = "Quizá";
+"event.action.decline" = "Rechazar";
+
+"event_list.summary.agenda" = "Agenda";
+
+"tooltips.navigation.prev_month" = "Mes anterior";
+"tooltips.navigation.today" = "Hoy";
+"tooltips.navigation.next_month" = "Próximo mes";
+
+"tooltips.toolbar.stay_open" = "Permanecer abierto";
+//"tooltips.toolbar.create" = "Create";
+"tooltips.toolbar.open_calendar" = "Calendario abierto";
+"tooltips.toolbar.open_reminders" = "Abrir recordatorios";
+"tooltips.toolbar.open_menu" = "Abrir menú";
+
+"calendars.source.others" = "Otros";

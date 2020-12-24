@@ -1,0 +1,10 @@
+input_dir: ${PROJECT_DIR}/${TARGET_NAME}
+output_dir: ${PROJECT_DIR}/${TARGET_NAME}
+
+strings:
+  inputs: Assets/en.lproj
+  outputs:
+    - templateName: structured-swift5
+      output: Constants/Strings.generated.swift
+      params:
+        enumName: Strings

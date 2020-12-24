@@ -1,0 +1,157 @@
+/*
+  Localizable.strings
+  CalX
+
+  Vietnamese translation
+*/
+
+"quit" = "Thoát";
+"search" = "Tìm kiếm";
+
+"access_required.calendars" = "Lịch đang chờ cấp quyền 'Truy cập đầy đủ'";
+"access_required.reminders" = "Nhắc nhở đang chờ cấp quyền";
+"access_required.open_settings" = "Mở Cài đặt";
+"access_required.cancel" = "Hủy";
+
+"auto_update.check_for_updates" = "Kiểm tra cập nhật";
+"auto_update.fetching_releases" = "Đang tải thông tin phiên bản";
+"auto_update.new_version" = "Có phiên bản mới: %@";
+"auto_update.updated_to" = "Đã cập nhật lên phiên bản %@";
+"auto_update.downloading" = "Đang tải phiên bản %@";
+"auto_update.install" = "Cài đặt";
+"auto_update.replace.message" = "Xác nhận vị trí ứng dụng để có quyền thay thế";
+"auto_update.replace.error" = "Bạn không được thay đổi thư mục cài đặt";
+
+"auto_update.failed.check" = "Không thể kiểm tra cập nhật";
+"auto_update.failed.download" = "Không thể tải xuống bản cập nhật";
+"auto_update.failed.install" = "Không thể cài đặt bản cập nhật";
+
+"attachments.open.message" = "CalX cần quyền truy cập tệp đính kèm của bạn";
+"attachments.open.authorize" = "Cấp quyền truy cập tệp đính kèm";
+
+"settings.title" = "Tùy chọn";
+"settings.tab.general" = "Chung";
+"settings.tab.appearance" = "Giao diện";
+"settings.tab.calendars" = "Lịch";
+"settings.tab.keyboard" = "Phím tắt";
+"settings.tab.about" = "Giới thiệu";
+
+"settings.menu_bar" = "Thanh Menu";
+"settings.menu_bar.auto_launch" = "Khởi động cùng hệ thống";
+"settings.menu_bar.show_icon" = "Hiện biểu tượng";
+"settings.menu_bar.show_date" = "Hiện ngày";
+"settings.menu_bar.show_background" = "Hiện nền không trong suốt";
+"settings.menu_bar.date_format_custom" = "Tùy chỉnh";
+"settings.menu_bar.open_on_hover" = "Mở khi di chuột qua";
+
+"settings.next_event" = "Sự kiện tiếp theo";
+"settings.next_event.show_next_event" = "Hiện sự kiện tiếp theo";
+"settings.next_event.grab_attention" = "Thu hút chú ý khi sự kiện sắp diễn ra";
+"settings.next_event.grab_attention.flashing" = "Nhấp nháy";
+"settings.next_event.grab_attention.sound" = "Phát âm thanh";
+"settings.next_event.detect_notch" = "Rút ngắn nếu có 'notch'";
+
+"settings.calendar" = "Lịch";
+"settings.calendar.show_month_outline" = "Hiện khung tháng";
+"settings.calendar.show_week_numbers" = "Hiện số tuần";
+"settings.calendar.preserve_selected_date" = "Giữ ngày đã chọn khi ẩn";
+"settings.calendar.show_declined_events" = "Hiện sự kiện đã từ chối";
+"settings.calendar.show_declined_events_tooltip" = "Chỉ hoạt động nếu cũng được bật trong ứng dụng Lịch gốc.";
+"settings.calendar.date_hover_option" = "Giữ ⌥ để xem ngày đang di chuột";
+"settings.calendar.week_count" = "Số tuần hiển thị";
+"settings.calendar.calendar_app_view_mode" = "Chế độ xem ứng dụng Lịch";
+"settings.calendar.default_calendar_app" = "Ứng dụng lịch mặc định";
+
+"settings.calendar.event_dots" = "Chấm sự kiện";
+"settings.calendar.event_dots.none" = "không";
+"settings.calendar.event_dots.single_neutral" = "trung tính";
+"settings.calendar.event_dots.single_highlighted" = "nổi bật";
+"settings.calendar.event_dots.multiple" = "nhiều màu";
+
+"settings.events" = "Sự kiện";
+"settings.events.show_map" = "Hiện bản đồ và thời tiết";
+"settings.events.show_overdue_reminders" = "Hiện nhắc nhở quá hạn";
+"settings.events.show_all_day_details" = "Hiện chi tiết sự kiện cả ngày";
+"settings.events.show_finished_events" = "Hiện sự kiện đã kết thúc";
+"settings.events.show_recurrence_indicator" = "Hiện chỉ báo lặp lại";
+"settings.events.force_local_time_zone" = "Hiện tất cả sự kiện theo múi giờ địa phương";
+"settings.events.show_event_list_summary" = "Hiện tóm tắt danh sách sự kiện";
+"settings.events.show_future_events" = "Hiện sự kiện tương lai";
+"settings.events.show_video_call_only" = "Chỉ hiện sự kiện video call";
+"settings.events.max_title_lines" = "Số dòng tiêu đề tối đa";
+
+"settings.appearance.transparency" = "Độ trong suốt";
+"settings.appearance.accessibility" = "Hỗ trợ tiếp cận";
+
+"settings.keyboard.local_shortcuts.title" = "Phím tắt cục bộ";
+"settings.keyboard.local_shortcuts.prev_date" = "Ngày trước";
+"settings.keyboard.local_shortcuts.next_date" = "Ngày sau";
+"settings.keyboard.local_shortcuts.prev_week" = "Tuần trước";
+"settings.keyboard.local_shortcuts.next_week" = "Tuần sau";
+"settings.keyboard.local_shortcuts.prev_month" = "Tháng trước";
+"settings.keyboard.local_shortcuts.next_month" = "Tháng sau";
+"settings.keyboard.local_shortcuts.curr_date" = "Ngày hiện tại";
+"settings.keyboard.local_shortcuts.open_date" = "Mở ngày đã chọn";
+"settings.keyboard.local_shortcuts.pin_calendar" = "Ghim lịch";
+
+"settings.keyboard.global_shortcuts.title" = "Phím tắt toàn cục";
+"settings.keyboard.global_shortcuts.open_calendar" = "Mở lịch";
+"settings.keyboard.global_shortcuts.open_next_event" = "Mở sự kiện tiếp theo";
+"settings.keyboard.global_shortcuts.open_next_event_options" = "Tùy chọn sự kiện tiếp theo";
+"settings.keyboard.global_shortcuts.open_next_reminder" = "Mở nhắc nhở tiếp theo";
+"settings.keyboard.global_shortcuts.open_next_reminder_options" = "Tùy chọn nhắc nhở tiếp theo";
+
+"formatter.date.today" = "Hôm nay";
+"formatter.date.relative.in" = "trong %@";
+"formatter.date.relative.ago" = "%@ trước";
+"formatter.date.relative.left" = "còn %@";
+
+"formatter.events.plural" = "%@ sự kiện";
+"formatter.reminders.plural" = "%@ nhắc nhở";
+
+"reminder.status.overdue" = "Quá hạn";
+
+"reminder.options.button" = "Tùy chọn";
+"reminder.options.complete" = "Hoàn thành";
+"reminder.options.remind" = "Nhắc lúc %@";
+
+"reminder.editor.headline" = "Nhắc nhở mới";
+"reminder.editor.title" = "Tiêu đề";
+"reminder.editor.save" = "Lưu";
+
+"reminder.editor.confirm.continue" = "Tiếp tục chỉnh sửa";
+"reminder.editor.confirm.discard" = "Bỏ tất cả thay đổi";
+
+"map_black_list.headline" = "Ẩn bản đồ nếu địa điểm chứa các từ sau";
+"map_black_list.new_item_text" = "Mục mới";
+
+"event.details.participant.organizer" = "người tổ chức";
+"event.details.participant.me" = "tôi";
+
+"event.all_day" = "Cả ngày";
+
+"event.status.accepted" = "Đã chấp nhận";
+"event.status.maybe" = "Có thể";
+"event.status.declined" = "Đã từ chối";
+"event.status.pending" = "Đang chờ";
+
+"event.action.open" = "Mở";
+"event.action.join" = "Tham gia";
+"event.action.skip" = "Bỏ qua";
+"event.action.accept" = "Chấp nhận";
+"event.action.maybe" = "Có thể";
+"event.action.decline" = "Từ chối";
+
+"event_list.summary.agenda" = "Hôm nay";
+
+"tooltips.navigation.prev_month" = "Tháng trước";
+"tooltips.navigation.today" = "Hôm nay";
+"tooltips.navigation.next_month" = "Tháng sau";
+
+"tooltips.toolbar.stay_open" = "Giữ mở";
+"tooltips.toolbar.create" = "Tạo mới";
+"tooltips.toolbar.open_calendar" = "Mở Lịch";
+"tooltips.toolbar.open_reminders" = "Mở Nhắc nhở";
+"tooltips.toolbar.open_menu" = "Mở menu";
+
+"calendars.source.others" = "Khác";

@@ -1,0 +1,508 @@
+//
+//  NextEventViewModel.swift
+//  Calendr
+//
+//  Created by Paker on 24/02/2021.
+//
+
+import Cocoa
+import RxSwift
+
+enum NextEventType {
+    case event
+    case reminder
+}
+
+private extension NextEventType {
+
+    func matches(_ type: EventType) -> Bool {
+        switch (self, type) {
+        case (.event, .event), (.reminder, .reminder):
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+// prevent growing indefinitely
+private let MAX_SKIPPED = 10
+
+private struct Skipped: Equatable {
+    let id: String
+    let start: Date
+
+    init(_ event: EventModel) {
+        id = event.id
+        start = event.start
+    }
+}
+
+private struct NextEvent: Equatable {
+    let event: EventModel
+    let grouped: [EventModel]
+    let isInProgress: Bool
+}
+
+class NextEventViewModel {
+
+    let title: Observable<String>
+    let time: Observable<String>
+    let barStyle: Observable<EventBarStyle>
+    let barColor: Observable<NSColor>
+    let backgroundColor: Observable<NSColor>
+    let hasEvent: Observable<Bool>
+    var isVisible: Observable<Bool> { hasEvent }
+    var isPending: Observable<Bool>
+    let isInProgress: Observable<Bool>
+    let textScaling: Observable<Double>
+
+    private let disposeBag = DisposeBag()
+    private let nextEvent = BehaviorSubject<NextEvent?>(value: nil)
+    private let skippedEvents = BehaviorSubject<[Skipped]>(value: [])
+    private let actionCallback = PublishSubject<ContextCallbackAction>()
+
+    private let isShowingDetailsModal: BehaviorSubject<Bool>
+
+    private let type: NextEventType
+    private let localStorage: LocalStorageProvider
+    private let settings: NextEventSettings
+    private let dateProvider: DateProviding
+    private let calendarService: CalendarServiceProviding
+    private let geocoder: GeocodeServiceProviding
+    private let weatherService: WeatherServiceProviding
+    private let workspace: WorkspaceServiceProviding
+
+    init(
+        type: NextEventType,
+        localStorage: LocalStorageProvider,
+        settings: NextEventSettings,
+        nextEventCalendars: Observable<[String]>,
+        dateProvider: DateProviding,
+        calendarService: CalendarServiceProviding,
+        geocoder: GeocodeServiceProviding,
+        weatherService: WeatherServiceProviding,
+        workspace: WorkspaceServiceProviding,
+        screenProvider: ScreenProviding,
+        isShowingDetailsModal: BehaviorSubject<Bool>,
+        scheduler: SchedulerType,
+        soundPlayer: SoundPlaying
+    ) {
+
+        self.type = type
+        self.localStorage = localStorage
+        self.dateProvider = dateProvider
+        self.calendarService = calendarService
+        self.geocoder = geocoder
+        self.weatherService = weatherService
+        self.settings = settings
+        self.workspace = workspace
+        self.isShowingDetailsModal = isShowingDetailsModal
+        self.textScaling = settings.eventStatusItemTextScaling
+
+        let throttledHoursToCheck = settings.eventStatusItemCheckRange
+            .throttle(.seconds(1), scheduler: scheduler)
+
+        let nextEvents = Observable
+            .combineLatest(
+                settings.showEventStatusItem,
+                throttledHoursToCheck,
+                nextEventCalendars
+            )
+            .repeat(when: calendarService.changeObservable)
+            .repeat(when: dateProvider.calendarUpdated.void())
+            .flatMapLatest { isEnabled, hoursToCheck, calendars -> Single<[EventModel]> in
+
+                guard isEnabled else { return .just([]) }
+
+                // `calendarUpdated` can take up to 24h to trigger (NSCalendarDayChanged)
+                // so we need to fetch ahead to cover the worst case scenario
+                let fetchAhead = 24
+
+                let start = dateProvider.calendar.startOfDay(for: dateProvider.now)
+                let end = dateProvider.calendar.date(byAdding: .hour, value: hoursToCheck + fetchAhead, to: start)!
+                let events = calendarService.events(from: start, to: end, calendars: calendars)
+
+                return events
+            }
+
+        let filteredEvents = Observable
+            .combineLatest(
+                nextEvents, skippedEvents
+            )
+            .map { events, skipped in
+                events.filter { event in
+                    type.matches(event.type) &&
+                    event.type != .reminder(completed: true) &&
+                    !event.isAllDay &&
+                    event.status != .declined &&
+                    !skipped.contains(Skipped(event))
+                }
+            }
+
+        let nextEventObservable = Observable
+            .combineLatest(filteredEvents, settings.eventStatusItemCheckRange)
+            .flatMapLatest { [dateProvider] events, hoursToCheck -> Observable<NextEvent?> in
+
+                Observable<Int>.interval(.seconds(1), scheduler: scheduler)
+                    .void()
+                    .startWith(())
+                    .map {
+                        let now = dateProvider.now
+
+                        let eventsInRange = events
+                            .filter { event in
+                                // event has not ended
+                                dateProvider.calendar.isDate(now, lessThan: event.end, granularity: .second)
+                                &&
+                                // event is in the configured range to check
+                                now.distance(to: event.start) <= 3600 * max(0.5, Double(hoursToCheck))
+                            }
+
+                        guard !eventsInRange.isEmpty else { return nil }
+
+                        let upcoming = Dictionary(grouping: eventsInRange, by: \.start)
+                            .sorted {
+                                abs($0.key.distance(to: now))
+                            }
+                            .first!.value
+                            .sorted(by: \.id)
+
+                        let event = if upcoming.count > 1 {
+                            makeEventsGroup(type, upcoming, calendarService)
+                        } else {
+                            upcoming.first
+                        }
+
+                        guard let event else { return nil }
+
+                        let isInProgress = dateProvider.calendar.isDate(
+                            now, greaterThanOrEqualTo: event.start, granularity: .second
+                        )
+                        return NextEvent(event: event, grouped: upcoming, isInProgress: isInProgress)
+                    }
+            }
+            .share(replay: 1)
+
+        nextEventObservable
+            .bind(to: nextEvent)
+            .disposed(by: disposeBag)
+
+        isInProgress = nextEventObservable.map { $0?.isInProgress ?? false }
+
+        let event = nextEvent.map(\.?.event)
+
+        isPending = event
+            .skipNil()
+            .map { $0.status == .pending }
+            .distinctUntilChanged()
+
+        barColor = event
+            .skipNil()
+            .map(\.calendar.color)
+            .distinctUntilChanged()
+
+        barStyle = event
+            .skipNil()
+            .map { $0.type ~= .event(.maybe) ? .bordered : .filled }
+            .distinctUntilChanged()
+
+        backgroundColor = nextEventObservable
+            .skipNil()
+            .withLatestFrom(
+                Observable.combineLatest(settings.eventStatusItemFlashing, settings.eventStatusItemSound)
+            ) { ($0, $1.0, $1.1) }
+            .map { [dateProvider] nextEvent, flashing, sound in
+
+                guard nextEvent.event.status != .pending else { return .clear }
+
+                guard !nextEvent.isInProgress else {
+                    return nextEvent.event.calendar.color.withAlphaComponent(0.3)
+                }
+
+                let diff = dateProvider.calendar.dateComponents([.minute, .second], from: dateProvider.now, to: nextEvent.event.start)
+
+                guard let minutes = diff.minute, let seconds = diff.second else { return .clear }
+
+                if sound {
+                    // play at 5 minutes
+                    if minutes == 5 && seconds == 0 {
+                        soundPlayer.play(.ping)
+                    }
+
+                    // play at 30 seconds to start
+                    if minutes == 0 && seconds == 30 {
+                        soundPlayer.play(.ping)
+                    }
+                }
+
+                if flashing {
+                    // flash continuously under 30 seconds to start
+                    if minutes == 0 && seconds <= 30 {
+                        return seconds % 2 == 0 ? .systemRed : .clear
+                    }
+
+                    // flash 5x every minute
+                    if minutes <= 5 {
+                        return seconds > 50 && seconds % 2 == 1 ? .systemRed : .clear
+                    }
+                }
+
+                return .clear
+            }
+            .distinctUntilChanged()
+
+        let shouldCompact = Observable
+            .combineLatest(settings.eventStatusItemDetectNotch, screenProvider.hasNotchObservable)
+            .map { $0 && $1 }
+            .distinctUntilChanged()
+
+        let eventStatusItemLength = Observable
+            .combineLatest(shouldCompact, settings.eventStatusItemLength)
+            .map { $0 ? min($1, Constants.compactMaxWidth) : $1 }
+
+        let nextEventTitle = event.skipNil().map(\.title)
+
+        title = Observable.combineLatest(nextEventTitle, eventStatusItemLength, shouldCompact)
+            .map { $0.count > $1 ? "\($0.prefix($1).trimmed)\($2 ? "." : "...")": $0 }
+            .distinctUntilChanged()
+
+        let dateFormatter = DateComponentsFormatter()
+        dateFormatter.calendar = dateProvider.calendar
+        dateFormatter.unitsStyle = .abbreviated
+        dateFormatter.maximumUnitCount = 2
+
+        time = nextEventObservable
+            .skipNil()
+            .map { [dateProvider] nextEvent in
+
+                let event = nextEvent.event
+                let isInProgress = nextEvent.isInProgress
+
+                var date = isInProgress && !event.type.isReminder ? event.end : event.start
+
+                let diff = dateProvider.calendar.dateComponents([.minute, .second], from: dateProvider.now, to: date)
+
+                dateFormatter.allowedUnits = [.hour, .minute]
+
+                if diff.minute! >= 24 * 60 {
+                    dateFormatter.allowedUnits = [.day]
+                    date = dateProvider.calendar.endOfDay(for: date)
+                }
+                else if diff.minute == 0, diff.second! <= 30 {
+                    dateFormatter.allowedUnits = [.second]
+                }
+                else if diff.second! > 0 {
+                    dateProvider.calendar.date(byAdding: .minute, value: 1, to: date).map { date = $0 }
+                }
+
+                let time: String
+
+                if !isInProgress {
+                    time = Strings.Formatter.Date.Relative.in(
+                        dateFormatter.string(from: dateProvider.now, to: date) ?? ""
+                    )
+                }
+                else if event.type.isReminder {
+                    time = Strings.Formatter.Date.Relative.ago(
+                        dateFormatter.string(from: date, to: dateProvider.now) ?? ""
+                    )
+                }
+                else {
+                    time = Strings.Formatter.Date.Relative.left(
+                        dateFormatter.string(from: dateProvider.now, to: date) ?? ""
+                    )
+                }
+
+                return time
+            }
+            .distinctUntilChanged()
+
+        hasEvent = nextEventObservable
+            .map(\.isNotNil)
+            .distinctUntilChanged()
+
+        actionCallback
+            .compactMap {
+                if case .event(let event, .skip) = $0 { event } else { nil }
+            }
+            .withLatestFrom(skippedEvents) { ($0, $1) }
+            .map { event, skipped in
+                let result = skipped + [Skipped(event)]
+                return result.suffix(MAX_SKIPPED)
+            }
+            .bind(to: skippedEvents)
+            .disposed(by: disposeBag)
+
+        localStorage.rx.observe(Int.self, preferredPositionKey, options: [.new])
+            .skipNil()
+            .filter { $0 > 0 }
+            .distinctUntilChanged()
+            .bind { [preferredPositionKey] in
+                localStorage.set($0, forKey: "saved \(preferredPositionKey)")
+            }
+            .disposed(by: disposeBag)
+    }
+
+    var preferredPositionKey: String {
+        let name: String
+        switch type {
+        case .event:
+            name = StatusItemName.event
+        case .reminder:
+            name = StatusItemName.reminder
+        }
+        return "\(Prefs.statusItemPreferredPosition) \(name)"
+    }
+
+    func restorePreferredPosition() {
+        let position = localStorage.integer(forKey: "saved \(preferredPositionKey)")
+        localStorage.set(position, forKey: preferredPositionKey)
+    }
+
+    func makeContextMenuViewModel() -> (any ContextMenuViewModel)? {
+        guard
+            let event = try? nextEvent.value()?.event,
+            !event.id.isEmpty
+        else { return nil }
+
+        return ContextMenuFactory.makeViewModel(
+            event: event,
+            dateProvider: dateProvider,
+            calendarService: calendarService,
+            workspace: workspace,
+            source: .menubar,
+            callback: actionCallback.asObserver()
+        )
+    }
+
+    func makeDetailsViewModel() -> EventDetailsViewModel? {
+        guard
+            let event = try? nextEvent.value()?.event,
+            !event.id.isEmpty
+        else { return nil }
+
+        return .init(
+            source: .menubar,
+            event: event,
+            dateProvider: dateProvider,
+            calendarService: calendarService,
+            geocoder: geocoder,
+            weatherService: weatherService,
+            workspace: workspace,
+            localStorage: localStorage,
+            settings: settings,
+            isShowingObserver: isShowingDetailsModal.asObserver(),
+            isInProgress: isInProgress,
+            callback: actionCallback.asObserver()
+        )
+    }
+
+    func makeEventListViewModel() -> EventListViewModel? {
+        // This is just the initial condition to open the list
+        // After that, it will respond to updates until closed
+        guard
+            let current = try? nextEvent.value(),
+            current.event.id.isEmpty,
+            current.grouped.count > 1
+        else { return nil }
+
+        let events = self.nextEvent.map {
+            DateEvents(date: $0?.event.start ?? Date(), events: $0?.grouped ?? [])
+        }
+
+        return .init(
+            source: .menubar,
+            eventsObservable: events,
+            isShowingDetailsModal: isShowingDetailsModal,
+            callback: actionCallback.asObserver(),
+            dateProvider: dateProvider,
+            calendarService: calendarService,
+            geocoder: geocoder,
+            weatherService: weatherService,
+            workspace: workspace,
+            localStorage: localStorage,
+            settings: settings,
+            scheduler: MainScheduler.instance,
+            refreshScheduler: MainScheduler.instance,
+            eventsScheduler: MainScheduler.instance
+        )
+    }
+}
+
+private enum Constants {
+
+    static let compactMaxWidth = 15
+}
+
+private func fakeEvent(start: Date, end: Date, title: String, type: EventType, color: NSColor) -> EventModel {
+
+    EventModel(
+        id: "",
+        externalId: "",
+        start: start,
+        end: end,
+        title: title,
+        location: nil,
+        coordinates: nil,
+        notes: nil,
+        url: nil,
+        isAllDay: false,
+        type: type,
+        calendar: .init(
+            id: "",
+            account: .init(title: "", email: nil),
+            title: "",
+            color: color,
+            isSubscribed: false
+        ),
+        participants: [],
+        timeZone: nil,
+        hasRecurrenceRules: false,
+        priority: nil,
+        attachments: []
+    )
+}
+
+private func makeEventsGroup(
+    _ type: NextEventType,
+    _ items: [EventModel],
+    _ calendarService: CalendarServiceProviding
+) -> EventModel? {
+
+    guard let first = items.first else { return nil }
+
+    let calendarType = switch (type) {
+        case .event: CalendarEntityType.event
+        case .reminder: CalendarEntityType.reminder
+    }
+
+    let color: NSColor
+
+    if Set(items.map(\.calendar.color)).count == 1 {
+        color = first.calendar.color
+    }
+    else if let defaultCalendar = calendarService.defaultCalendar(forNew: calendarType),
+       items.contains(where: { $0.calendar.id == defaultCalendar.id }) {
+
+        color = defaultCalendar.color
+    }
+    else {
+        color = .controlAccentColor
+    }
+
+    let title = if items.distinct(by: \.title).count == 1 { first.title } else {
+        switch type {
+            case .event: Strings.Formatter.Events.plural(items.count)
+            case .reminder: Strings.Formatter.Reminders.plural(items.count)
+        }
+    }
+
+    return fakeEvent(
+        start: first.start,
+        end: items.map(\.end).max()!,
+        title: title,
+        type: first.type,
+        color: color,
+    )
+}
