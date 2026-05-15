@@ -580,6 +580,15 @@ class MainViewController: NSViewController {
         viewController.isResizable = false
         viewController.delegate = viewModel
 
+        // macOS 26 Liquid Glass: ẩn title bar, nội dung dialog chiếm toàn bộ chiều cao
+        viewController.windowConfiguration = { window in
+            window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.styleMask.insert(.fullSizeContentView)
+            window.backgroundColor = .clear
+            window.isMovableByWindowBackground = true
+        }
+
         viewModel.onCloseConfirmed = { [weak viewController] in
             viewController?.dismiss(nil)
         }

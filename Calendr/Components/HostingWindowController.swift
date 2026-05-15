@@ -17,12 +17,13 @@ class HostingWindowController<RootView: View>: NSHostingController<RootView>, NS
     weak var delegate: HostingWindowControllerDelegate?
 
     var isResizable = true
+    var windowConfiguration: ((NSWindow) -> Void)?
 
     private var isFirstLayout = true
 
     override init(rootView: RootView) {
         super.init(rootView: rootView)
-        
+
         title = ""
     }
     
@@ -60,6 +61,8 @@ class HostingWindowController<RootView: View>: NSHostingController<RootView>, NS
         if !isResizable {
             window.styleMask.remove(.resizable)
         }
+
+        windowConfiguration?(window)
     }
 
     override func cancelOperation(_ sender: Any?) {

@@ -2,9 +2,6 @@
 //  ReminderDialog.swift
 //  Calendr
 //
-//  Adapted from user's SwiftUI design — works as an NSWindow-hosted SwiftUI view
-//  (no fake window chrome; HostingWindowController provides the real chrome).
-//
 
 import SwiftUI
 
@@ -28,7 +25,6 @@ enum ReminderPriority: String, CaseIterable, Identifiable {
         case .high:   "Cao"
         }
     }
-    /// EKReminder.priority value (0 = none, 1 = high, 5 = medium, 9 = low)
     var ekPriority: Int {
         switch self { case .none: 0; case .low: 9; case .medium: 5; case .high: 1 }
     }
@@ -81,7 +77,6 @@ struct ReminderDialog: View {
 
     @State private var kind: ReminderKind
     @State private var title: String = ""
-    @State private var notes: String = ""
     @State private var reminderCalendarID: String
     @State private var eventCalendarID: String
     @State private var tags: [String] = []
@@ -114,28 +109,45 @@ struct ReminderDialog: View {
 
     private var currentCalendars: [DialogCalendarItem] { kind == .event ? eventCalendars : reminderCalendars }
     private var currentCalendarID: Binding<String> { kind == .event ? $eventCalendarID : $reminderCalendarID }
-
     private var currentItem: DialogCalendarItem {
         let id = kind == .event ? eventCalendarID : reminderCalendarID
-        return currentCalendars.first(where: { $0.id == id }) ?? currentCalendars.first ?? .init(id: "", name: "", group: "", color: .accentColor)
+        return currentCalendars.first(where: { $0.id == id })
+            ?? currentCalendars.first
+            ?? .init(id: "", name: "", group: "", color: .accentColor)
     }
 
     var body: some View {
         VStack(spacing: 0) {
 
-            // Title bar
-            Text(kind == .event ? "Sự kiện mới" : "Nhắc nhở mới")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, 14)
-                .frame(height: 38)
-                .overlay(Divider(), alignment: .bottom)
+            // ── Title bar ──────────────────────────────────────
+            HStack(spacing: 0) {
+                // Close button thay cho traffic lights
+                Button(action: onCancel) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 14)
 
-            // Body
-            VStack(spacing: 8) {
+                Spacer()
 
-                // Kind segmented picker
+                Text(kind == .event ? "Sự kiện mới" : "Nhắc nhở mới")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                // Balance spacer to keep title centered
+                Color.clear.frame(width: 27)
+            }
+            .frame(height: 38)
+            .overlay(Divider(), alignment: .bottom)
+
+            // ── Body ───────────────────────────────────────────
+            VStack(alignment: .leading, spacing: 0) {
+
+                // Kind segmented picker — centered
                 Picker("", selection: $kind) {
                     ForEach(ReminderKind.allCases) { k in
                         SwiftUI.Label(k.label, systemImage: k.systemImage).tag(k)
@@ -144,47 +156,54 @@ struct ReminderDialog: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(maxWidth: 220)
-                .padding(.top, 6)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
 
-                // Title + Notes card
-                ReminderTitleNotesCard(title: $title, notes: $notes,
-                                       kind: kind, dotColor: currentItem.color)
+                // Title card — chỉ tiêu đề, không có ghi chú
+                ReminderTitleCard(title: $title, kind: kind, dotColor: currentItem.color)
+                    .padding(.bottom, 8)
+
+                Divider()
 
                 // Date rows
                 if kind == .reminder {
-                    MetaRow(label: "Lịch hẹn") {
+                    DialogRow(label: "Lịch hẹn") {
                         DatePicker("", selection: $startDate,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
                             .datePickerStyle(.compact)
-                        Spacer()
-                        Text("Cả ngày").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Divider()
+                    DialogRow(label: "Cả ngày") {
                         Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
                     }
                 } else {
-                    MetaRow(label: "Bắt đầu") {
+                    DialogRow(label: "Bắt đầu") {
                         DatePicker("", selection: $startDate,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
                             .datePickerStyle(.compact)
-                        Spacer()
-                        Text("Cả ngày").font(.caption).foregroundStyle(.secondary)
-                        Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
                     }
                     Divider()
-                    MetaRow(label: "Kết thúc") {
+                    DialogRow(label: "Kết thúc") {
                         DatePicker("", selection: $endDate,
                                    in: startDate...,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
                             .datePickerStyle(.compact)
                     }
+                    Divider()
+                    DialogRow(label: "Cả ngày") {
+                        Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
+                    }
                 }
+
                 Divider()
 
                 // Calendar picker
                 if !currentCalendars.isEmpty {
-                    MetaRow(label: "Lịch") {
+                    DialogRow(label: "Lịch") {
                         ReminderCalendarMenu(items: currentCalendars, selection: currentCalendarID)
                     }
                     Divider()
@@ -192,29 +211,28 @@ struct ReminderDialog: View {
 
                 // Hashtags (reminders only)
                 if kind == .reminder {
-                    MetaRow(label: "Hashtag", align: .top) {
+                    DialogRow(label: "Hashtag", align: .top) {
                         ReminderHashtagField(tags: $tags)
                     }
                     Divider()
                 }
 
                 // Priority
-                MetaRow(label: "Ưu tiên") {
+                DialogRow(label: "Ưu tiên") {
                     ReminderPriorityMenu(selection: $priority)
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 10)
             .frame(maxHeight: .infinity, alignment: .top)
 
-            // Footer
+            // ── Footer ─────────────────────────────────────────
             HStack {
                 Spacer()
                 Button("Hủy") { onCancel() }
                     .keyboardShortcut(.cancelAction)
                 Button("Thêm") {
                     onSave(ReminderDialogResult(
-                        kind: kind, title: title, notes: notes,
+                        kind: kind, title: title, notes: "",
                         calendarID: kind == .event ? eventCalendarID : reminderCalendarID,
                         tags: tags, priority: priority, allDay: allDay,
                         startDate: startDate, endDate: endDate
@@ -226,11 +244,13 @@ struct ReminderDialog: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(.black.opacity(0.06))
+            .background(.primary.opacity(0.05))
             .overlay(Divider(), alignment: .top)
         }
-        .frame(width: 440, height: 420)
-        // Khi lịch load xong (async), cập nhật selection nếu ID đang rỗng
+        .frame(width: 420, height: 400)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.3), radius: 40, y: 16)
         .onChange(of: reminderCalendars) { _, newCalendars in
             if reminderCalendarID.isEmpty, let first = newCalendars.first {
                 reminderCalendarID = first.id
@@ -246,38 +266,8 @@ struct ReminderDialog: View {
 
 // MARK: - Components
 
-private struct ReminderTitleNotesCard: View {
-    @Binding var title: String
-    @Binding var notes: String
-    let kind: ReminderKind
-    let dotColor: Color
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 9) {
-            Circle().fill(dotColor).frame(width: 9, height: 9)
-                .padding(.top, 7)
-            VStack(alignment: .leading, spacing: 3) {
-                TextField(kind == .event ? "Tiêu đề sự kiện" : "Tiêu đề lời nhắc",
-                          text: $title, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 16, weight: .semibold))
-                    .lineLimit(1...3)
-                TextField("Mô tả chi tiết, ghi chú thêm…",
-                          text: $notes, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1...4)
-            }
-        }
-        .padding(.horizontal, 11)
-        .padding(.vertical, 9)
-        .background(RoundedRectangle(cornerRadius: 11).fill(.primary.opacity(0.04)))
-        .overlay(RoundedRectangle(cornerRadius: 11).stroke(.primary.opacity(0.08), lineWidth: 0.5))
-    }
-}
-
-private struct MetaRow<Content: View>: View {
+/// Row căn trái: [label 60px] [content]
+private struct DialogRow<Content: View>: View {
     let label: String
     var align: VerticalAlignment = .center
     @ViewBuilder let content: () -> Content
@@ -287,10 +277,40 @@ private struct MetaRow<Content: View>: View {
             Text(label)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: 58, alignment: .leading)
-            HStack(spacing: 6) { content() }
+                .frame(width: 60, alignment: .leading)
+            content()
         }
-        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 8)
+    }
+}
+
+/// Title-only card — notes được gửi riêng đến Apple, không hiển thị
+private struct ReminderTitleCard: View {
+    @Binding var title: String
+    let kind: ReminderKind
+    let dotColor: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 9) {
+            Circle()
+                .fill(dotColor)
+                .frame(width: 9, height: 9)
+                .padding(.top, 7)
+            TextField(
+                kind == .event ? "Tiêu đề sự kiện" : "Tiêu đề lời nhắc",
+                text: $title,
+                axis: .vertical
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 15, weight: .semibold))
+            .lineLimit(1...3)
+        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10).fill(.primary.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.primary.opacity(0.08), lineWidth: 0.5))
     }
 }
 
@@ -319,14 +339,14 @@ private struct ReminderCalendarMenu: View {
                 }
             }
         } label: {
-            HStack(spacing: 7) {
-                Circle().fill(current.color).frame(width: 10, height: 10)
+            HStack(spacing: 6) {
+                Circle().fill(current.color).frame(width: 9, height: 9)
                 Text(current.name).font(.system(size: 12.5, weight: .semibold))
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 8).fill(.gray.opacity(0.18)))
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
@@ -342,22 +362,21 @@ private struct ReminderPriorityMenu: View {
                     SwiftUI.Label {
                         Text(p.label)
                     } icon: {
-                        Image(systemName: p.systemImage)
-                            .foregroundStyle(p.color)
+                        Image(systemName: p.systemImage).foregroundStyle(p.color)
                     }
                 }
             }
         } label: {
-            HStack(spacing: 7) {
+            HStack(spacing: 6) {
                 Image(systemName: selection.systemImage)
                     .foregroundStyle(selection.color)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                 Text(selection.label).font(.system(size: 12.5, weight: .semibold))
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 8).fill(.gray.opacity(0.18)))
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
@@ -369,30 +388,28 @@ private struct ReminderHashtagField: View {
     @State private var draft: String = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            ReminderFlowLayout(spacing: 4) {
-                ForEach(tags, id: \.self) { tag in
-                    HStack(spacing: 3) {
-                        Text("#\(tag)")
-                            .font(.system(size: 11.5, weight: .semibold))
-                            .foregroundStyle(.blue)
-                        Button { tags.removeAll { $0 == tag } } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 10)).foregroundStyle(.secondary)
-                        }.buttonStyle(.plain)
-                    }
-                    .padding(.leading, 7).padding(.trailing, 3).padding(.vertical, 2)
-                    .background(Capsule().fill(.blue.opacity(0.15)))
-                    .overlay(Capsule().stroke(.blue.opacity(0.30), lineWidth: 0.5))
+        ReminderFlowLayout(spacing: 4) {
+            ForEach(tags, id: \.self) { tag in
+                HStack(spacing: 3) {
+                    Text("#\(tag)")
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundStyle(.blue)
+                    Button { tags.removeAll { $0 == tag } } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 10)).foregroundStyle(.secondary)
+                    }.buttonStyle(.plain)
                 }
-                TextField("# thêm hashtag…", text: $draft)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12.5))
-                    .onSubmit { commit() }
+                .padding(.leading, 7).padding(.trailing, 3).padding(.vertical, 2)
+                .background(Capsule().fill(.blue.opacity(0.12)))
+                .overlay(Capsule().stroke(.blue.opacity(0.25), lineWidth: 0.5))
             }
-            .padding(.horizontal, 6).padding(.vertical, 4)
-            .background(RoundedRectangle(cornerRadius: 8).fill(.gray.opacity(0.14)))
+            TextField("# thêm hashtag…", text: $draft)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+                .onSubmit { commit() }
         }
+        .padding(.horizontal, 6).padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.05)))
     }
 
     private func commit() {
@@ -403,8 +420,6 @@ private struct ReminderHashtagField: View {
     }
 }
 
-// MARK: - FlowLayout
-
 private struct ReminderFlowLayout: Layout {
     var spacing: CGFloat = 4
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -413,22 +428,18 @@ private struct ReminderFlowLayout: Layout {
         for sv in subviews {
             let sz = sv.sizeThatFits(.unspecified)
             if x + sz.width > maxW { x = 0; y += rowH + spacing; rowH = 0 }
-            x += sz.width + spacing
-            rowH = max(rowH, sz.height)
+            x += sz.width + spacing; rowH = max(rowH, sz.height)
         }
         return CGSize(width: maxW, height: y + rowH)
     }
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let maxW = bounds.width
-        var x: CGFloat = bounds.minX, y: CGFloat = bounds.minY, rowH: CGFloat = 0
+        var x = bounds.minX, y = bounds.minY, rowH: CGFloat = 0
         for sv in subviews {
             let sz = sv.sizeThatFits(.unspecified)
-            if x - bounds.minX + sz.width > maxW {
-                x = bounds.minX; y += rowH + spacing; rowH = 0
-            }
+            if x - bounds.minX + sz.width > maxW { x = bounds.minX; y += rowH + spacing; rowH = 0 }
             sv.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-            x += sz.width + spacing
-            rowH = max(rowH, sz.height)
+            x += sz.width + spacing; rowH = max(rowH, sz.height)
         }
     }
 }
@@ -443,9 +454,7 @@ extension CalendarModel {
 
 extension [CalendarSection] {
     func asDialogItems() -> [DialogCalendarItem] {
-        flatMap { section in
-            section.calendars.map { $0.asDialogItem }
-        }
+        flatMap { $0.calendars.map { $0.asDialogItem } }
     }
 }
 
@@ -453,7 +462,7 @@ extension [CalendarSection] {
 
 #if DEBUG
 
-#Preview("Dialog") {
+#Preview {
     ReminderDialog(
         reminderCalendars: [
             .init(id: "1", name: "Nhắc nhở", group: "iCloud", color: .blue),
@@ -462,8 +471,8 @@ extension [CalendarSection] {
         eventCalendars: [
             .init(id: "3", name: "Lịch", group: "iCloud", color: .green),
         ],
-        onSave: { print("Saved:", $0) },
-        onCancel: { print("Cancelled") }
+        onSave: { _ in },
+        onCancel: {}
     )
     .padding(40)
     .background(Color(nsColor: .windowBackgroundColor))
