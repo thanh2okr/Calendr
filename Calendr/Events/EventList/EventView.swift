@@ -362,6 +362,8 @@ class EventView: NSView {
     private func setUpBindings() {
 
         rx.isHovered
+            .startWith(false)
+            .distinctUntilChanged()
             .map(!)
             .bind(to: hoverOverlay.rx.isHidden)
             .disposed(by: disposeBag)
@@ -627,14 +629,16 @@ class EventView: NSView {
     }
 
     override func updateTrackingAreas() {
+        super.updateTrackingAreas()
         trackingAreas.forEach(removeTrackingArea(_:))
-        addTrackingRect(bounds, owner: self, userData: nil, assumeInside: false)
-
-        guard let mouseLocation = window?.mouseLocationOutsideOfEventStream,
-              isMousePoint(convert(mouseLocation, from: nil), in: bounds)
-        else {
-            return hoverLayer.isHidden = true
-        }
+        // Use modern NSTrackingArea — .inVisibleRect prevents spurious
+        // mouseEntered events when views are re-laid-out inside scroll views
+        addTrackingArea(NSTrackingArea(
+            rect: .zero,
+            options: [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        ))
     }
 
     required init?(coder: NSCoder) {

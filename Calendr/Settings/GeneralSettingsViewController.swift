@@ -14,6 +14,10 @@ class GeneralSettingsViewController: NSViewController, SettingsUI {
 
     private let viewModel: SettingsViewModel
 
+    // Language
+    private let languageLabel = Label(text: "Language")
+    private let languageDropdown = Dropdown()
+
     // Menu Bar
     private let autoLaunchCheckbox = Checkbox(title: Strings.Settings.MenuBar.autoLaunch)
     private let showMenuBarIconCheckbox = Checkbox(title: Strings.Settings.MenuBar.showIcon)
@@ -97,6 +101,7 @@ class GeneralSettingsViewController: NSViewController, SettingsUI {
         super.viewDidLoad()
 
         let allSections = Sections.create([
+            makeSection(title: "Language",                  content: languageContent),
             makeSection(title: Strings.Settings.menuBar,    content: menuBarContent),
             makeSection(title: Strings.Settings.nextEvent,  content: nextEventContent),
             makeSection(title: Strings.Settings.calendar,   content: calendarContent),
@@ -149,6 +154,13 @@ class GeneralSettingsViewController: NSViewController, SettingsUI {
     func fittingSize(minWidth: CGFloat) -> NSSize {
         return NSSize(width: minWidth, height: 540)
     }
+
+    private lazy var languageContent: NSView = {
+        languageDropdown.isBordered = false
+        languageDropdown.setContentHuggingPriority(.required, for: .horizontal)
+
+        return NSStackView(views: [languageLabel, .spacer, languageDropdown])
+    }()
 
     private lazy var menuBarContent: NSView = {
 
@@ -333,10 +345,61 @@ class GeneralSettingsViewController: NSViewController, SettingsUI {
     }()
 
     private func setUpBindings() {
+        setUpLanguage()
         setUpMenuBar()
         setUpNextEvent()
         setUpCalendar()
         setUpEvents()
+    }
+
+    private func setUpLanguage() {
+
+        // Language options: (display name, language code or nil for system default)
+        let languageOptions: [(title: String, code: String?)] = [
+            ("System (Default)", nil),
+            ("English", "en"),
+            ("Tiếng Việt", "vi"),
+        ]
+
+        let menu = NSMenu()
+        for option in languageOptions {
+            let item = NSMenuItem()
+            item.title = option.title
+            menu.addItem(item)
+        }
+        languageDropdown.menu = menu
+
+        // Read current selection from AppleLanguages
+        let currentCode = (UserDefaults.standard.array(forKey: "AppleLanguages") as? [String])?.first
+        let selectedIndex = languageOptions.firstIndex(where: { $0.code == currentCode }) ?? 0
+        languageDropdown.selectItem(at: selectedIndex)
+
+        languageDropdown.rx.controlProperty(
+            getter: { _ in self.languageDropdown.indexOfSelectedItem },
+            setter: { $0.selectItem(at: $1) }
+        )
+        .skip(1)
+        .bind { [weak self] index in
+            guard let self else { return }
+            let selected = languageOptions[index]
+            if let code = selected.code {
+                UserDefaults.standard.set([code], forKey: "AppleLanguages")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+            }
+            // Prompt restart
+            let alert = NSAlert()
+            alert.messageText = selected.code == "vi" ? "Khởi động lại để áp dụng" : "Restart to Apply"
+            alert.informativeText = selected.code == "vi"
+                ? "CalX cần được khởi động lại để thay đổi ngôn ngữ."
+                : "CalX needs to restart to apply the language change."
+            alert.addButton(withTitle: selected.code == "vi" ? "Khởi động lại" : "Restart Now")
+            alert.addButton(withTitle: selected.code == "vi" ? "Để sau" : "Later")
+            if alert.runModal() == .alertFirstButtonReturn {
+                NSApp.terminate(nil)
+            }
+        }
+        .disposed(by: disposeBag)
     }
 
     private func setUpMenuBar() {
