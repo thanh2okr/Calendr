@@ -227,6 +227,17 @@ struct ReminderDialog: View {
             .overlay(Divider(), alignment: .top)
         }
         .frame(width: 440, height: 420)
+        // Khi lịch load xong (async), cập nhật selection nếu ID đang rỗng
+        .onChange(of: reminderCalendars) { _, newCalendars in
+            if reminderCalendarID.isEmpty, let first = newCalendars.first {
+                reminderCalendarID = first.id
+            }
+        }
+        .onChange(of: eventCalendars) { _, newCalendars in
+            if eventCalendarID.isEmpty, let first = newCalendars.first {
+                eventCalendarID = first.id
+            }
+        }
     }
 }
 
