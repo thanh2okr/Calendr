@@ -156,6 +156,7 @@ struct ReminderDialog: View {
                         DatePicker("", selection: $startDate,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
+                            .datePickerStyle(.compact)
                         Spacer()
                         Text("Cả ngày").font(.caption).foregroundStyle(.secondary)
                         Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
@@ -165,6 +166,7 @@ struct ReminderDialog: View {
                         DatePicker("", selection: $startDate,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
+                            .datePickerStyle(.compact)
                         Spacer()
                         Text("Cả ngày").font(.caption).foregroundStyle(.secondary)
                         Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
@@ -175,6 +177,7 @@ struct ReminderDialog: View {
                                    in: startDate...,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
+                            .datePickerStyle(.compact)
                     }
                 }
                 Divider()
