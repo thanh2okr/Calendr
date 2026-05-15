@@ -77,6 +77,7 @@ struct ReminderDialog: View {
 
     @State private var kind: ReminderKind
     @State private var title: String = ""
+    @State private var notes: String = ""
     @State private var reminderCalendarID: String
     @State private var eventCalendarID: String
     @State private var tags: [String] = []
@@ -160,8 +161,8 @@ struct ReminderDialog: View {
                 .padding(.top, 10)
                 .padding(.bottom, 8)
 
-                // Title card — chỉ tiêu đề, không có ghi chú
-                ReminderTitleCard(title: $title, kind: kind, dotColor: currentItem.color)
+                // Title + Notes card
+                ReminderTitleCard(title: $title, notes: $notes, kind: kind, dotColor: currentItem.color)
                     .padding(.bottom, 8)
 
                 Divider()
@@ -172,7 +173,7 @@ struct ReminderDialog: View {
                         DatePicker("", selection: $startDate,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
-                            .datePickerStyle(.compact)
+                            .datePickerStyle(.field)
                     }
                     Divider()
                     DialogRow(label: "Cả ngày") {
@@ -183,7 +184,7 @@ struct ReminderDialog: View {
                         DatePicker("", selection: $startDate,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
-                            .datePickerStyle(.compact)
+                            .datePickerStyle(.field)
                     }
                     Divider()
                     DialogRow(label: "Kết thúc") {
@@ -191,7 +192,7 @@ struct ReminderDialog: View {
                                    in: startDate...,
                                    displayedComponents: allDay ? .date : [.date, .hourAndMinute])
                             .labelsHidden()
-                            .datePickerStyle(.compact)
+                            .datePickerStyle(.field)
                     }
                     Divider()
                     DialogRow(label: "Cả ngày") {
@@ -232,7 +233,7 @@ struct ReminderDialog: View {
                     .keyboardShortcut(.cancelAction)
                 Button("Thêm") {
                     onSave(ReminderDialogResult(
-                        kind: kind, title: title, notes: "",
+                        kind: kind, title: title, notes: notes,
                         calendarID: kind == .event ? eventCalendarID : reminderCalendarID,
                         tags: tags, priority: priority, allDay: allDay,
                         startDate: startDate, endDate: endDate
@@ -247,7 +248,7 @@ struct ReminderDialog: View {
             .background(.primary.opacity(0.05))
             .overlay(Divider(), alignment: .top)
         }
-        .frame(width: 420, height: 400)
+        .frame(width: 420, height: 460)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.3), radius: 40, y: 16)
@@ -285,26 +286,38 @@ private struct DialogRow<Content: View>: View {
     }
 }
 
-/// Title-only card — notes được gửi riêng đến Apple, không hiển thị
 private struct ReminderTitleCard: View {
     @Binding var title: String
+    @Binding var notes: String
     let kind: ReminderKind
     let dotColor: Color
 
     var body: some View {
-        HStack(alignment: .top, spacing: 9) {
-            Circle()
-                .fill(dotColor)
-                .frame(width: 9, height: 9)
-                .padding(.top, 7)
-            TextField(
-                kind == .event ? "Tiêu đề sự kiện" : "Tiêu đề lời nhắc",
-                text: $title,
-                axis: .vertical
-            )
-            .textFieldStyle(.plain)
-            .font(.system(size: 15, weight: .semibold))
-            .lineLimit(1...3)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: 9) {
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 9, height: 9)
+                    .padding(.top, 5)
+                TextField(
+                    kind == .event ? "Tiêu đề sự kiện" : "Tiêu đề lời nhắc",
+                    text: $title,
+                    axis: .vertical
+                )
+                .textFieldStyle(.plain)
+                .font(.system(size: 15, weight: .semibold))
+                .lineLimit(1...3)
+            }
+
+            Divider().padding(.leading, 18).padding(.top, 6)
+
+            TextField("Ghi chú…", text: $notes, axis: .vertical)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .lineLimit(1...4)
+                .padding(.leading, 18)
+                .padding(.top, 6)
         }
         .padding(.horizontal, 11)
         .padding(.vertical, 10)

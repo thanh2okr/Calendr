@@ -580,13 +580,16 @@ class MainViewController: NSViewController {
         viewController.isResizable = false
         viewController.delegate = viewModel
 
-        // macOS 26 Liquid Glass: ẩn title bar, nội dung dialog chiếm toàn bộ chiều cao
+        // macOS 26 Liquid Glass: xóa hoàn toàn chrome, dialog tự render rounded card
         viewController.windowConfiguration = { window in
-            window.titleVisibility = .hidden
-            window.titlebarAppearsTransparent = true
-            window.styleMask.insert(.fullSizeContentView)
+            window.styleMask = [.fullSizeContentView]
             window.backgroundColor = .clear
             window.isMovableByWindowBackground = true
+            window.isOpaque = false
+            // Ẩn traffic-light buttons (vẫn còn trong view hierarchy khi có .titled)
+            window.standardWindowButton(.closeButton)?.isHidden = true
+            window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            window.standardWindowButton(.zoomButton)?.isHidden = true
         }
 
         viewModel.onCloseConfirmed = { [weak viewController] in
