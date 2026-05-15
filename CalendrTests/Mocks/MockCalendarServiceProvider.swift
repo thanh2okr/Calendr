@@ -10,7 +10,8 @@ import RxSwift
 @testable import Calendr
 
 typealias RescheduleReminderArgs = (date: Date, isAllDay: Bool)
-typealias CreateReminderArgs = (title: String, calendar: String, date: Date, isAllDay: Bool)
+typealias CreateReminderArgs = (title: String, calendar: String, date: Date, isAllDay: Bool, notes: String?, priority: Int)
+typealias CreateEventArgs = (title: String, notes: String?, calendar: String, startDate: Date, endDate: Date, isAllDay: Bool)
 typealias EventsArgs = (start: Date, end: Date, calendars: [String])
 
 class MockCalendarServiceProvider: CalendarServiceProviding {
@@ -19,6 +20,7 @@ class MockCalendarServiceProvider: CalendarServiceProviding {
 
     let (spyEventsObservable, spyEventsObserver) = PublishSubject<EventsArgs>.pipe()
     let (spyCreateReminderObservable, spyCreateReminderObserver) = PublishSubject<CreateReminderArgs>.pipe()
+    let (spyCreateEventObservable, spyCreateEventObserver) = PublishSubject<CreateEventArgs>.pipe()
     let (spyCompleteReminderObservable, spyCompleteReminderObserver) = PublishSubject<Bool>.pipe()
     let (spyRescheduleReminderObservable, spyRescheduleReminderObserver) = PublishSubject<RescheduleReminderArgs>.pipe()
     let (spyChangeEventStatusObservable, spyChangeEventStatusObserver) = PublishSubject<EventStatus>.pipe()
@@ -59,8 +61,13 @@ class MockCalendarServiceProvider: CalendarServiceProviding {
         return .empty()
     }
 
-    func createReminder(title: String, calendar: String, date: Date, isAllDay: Bool) -> Completable {
-        spyCreateReminderObserver.onNext((title, calendar, date, isAllDay))
+    func createReminder(title: String, calendar: String, date: Date, isAllDay: Bool, notes: String?, priority: Int) -> Completable {
+        spyCreateReminderObserver.onNext((title, calendar, date, isAllDay, notes, priority))
+        return .empty()
+    }
+
+    func createEvent(title: String, notes: String?, calendar: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Completable {
+        spyCreateEventObserver.onNext((title, notes, calendar, startDate, endDate, isAllDay))
         return .empty()
     }
 }

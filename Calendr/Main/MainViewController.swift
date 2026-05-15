@@ -459,54 +459,6 @@ class MainViewController: NSViewController {
 
     private func setUpCreateButton() {
 
-        // Top-level create menu: choose destination app
-        let createMenu = TrackedMenu()
-
-        // — Apple Reminders item (with quick time options submenu for today)
-        let reminderMenu = TrackedMenu()
-
-        let formatter = RelativeDateTimeFormatter()
-        formatter.dateTimeStyle = .named
-
-        let options: [DateComponents] = [
-            .init(minute: 5),
-            .init(minute: 15),
-            .init(minute: 30),
-            .init(hour: 1),
-            .init(day: 1)
-        ]
-
-        // "New Reminder…" at top of submenu (no time offset)
-        let newReminderItem = NSMenuItem()
-        newReminderItem.title = "New Reminder…"
-        newReminderItem.target = self
-        newReminderItem.action = #selector(MainViewController.openReminderEditor)
-        reminderMenu.addItem(newReminderItem)
-        reminderMenu.addItem(.separator())
-
-        options.forEach { option in
-            let item = NSMenuItem()
-            item.title = Strings.Reminder.Options.remind(formatter.localizedString(from: option))
-            item.representedObject = option
-            item.target = self
-            item.action = #selector(MainViewController.openReminderEditor)
-            reminderMenu.addItem(item)
-        }
-
-        let reminderItem = NSMenuItem()
-        reminderItem.title = "Apple Reminders"
-        reminderItem.image = NSImage(systemSymbolName: "list.bullet.rectangle", accessibilityDescription: nil)
-        reminderItem.submenu = reminderMenu
-        createMenu.addItem(reminderItem)
-
-        // — Apple Calendar item
-        let calendarItem = NSMenuItem()
-        calendarItem.title = "Apple Calendar"
-        calendarItem.image = NSImage(systemSymbolName: "calendar.badge.plus", accessibilityDescription: nil)
-        calendarItem.target = self
-        calendarItem.action = #selector(MainViewController.openCalendarForNewEvent)
-        createMenu.addItem(calendarItem)
-
         selectedDate.map { [dateProvider] date in
             dateProvider.calendar.isDate(date, lessThan: dateProvider.now, granularity: .day)
         }
@@ -514,14 +466,9 @@ class MainViewController: NSViewController {
         .disposed(by: disposeBag)
 
         createBtn.rx.tap.bind { [weak self] in
-            guard let self else { return }
-            createMenu.popUp(positioning: nil, at: .init(x: 0, y: createBtn.frame.height), in: createBtn)
+            self?.openReminderEditor()
         }
         .disposed(by: disposeBag)
-    }
-
-    @objc private func openCalendarForNewEvent() {
-        workspace.open(selectedDate.current)
     }
 
     private func setUpDateSuggestion() {
@@ -618,14 +565,12 @@ class MainViewController: NSViewController {
         settingsViewController.selectedTabViewItemIndex = tab.rawValue
     }
 
-    @objc private func openReminderEditor(_ sender: NSMenuItem? = nil) {
-
-        let dateComponents = sender?.representedObject as? DateComponents ?? .init()
+    @objc private func openReminderEditor() {
 
         let viewModel = ReminderEditorViewModel(
             dueDate: .withCurrentTime(
                 at: selectedDate.current,
-                adding: dateComponents,
+                adding: .init(),
                 using: dateProvider
             ),
             calendarService: calendarService

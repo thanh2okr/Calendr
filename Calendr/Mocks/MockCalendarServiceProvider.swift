@@ -48,7 +48,8 @@ class MockCalendarServiceProvider: CalendarServiceProviding {
 
     func defaultCalendar(forNew type: CalendarEntityType) -> CalendarModel? { m_calendars.first }
 
-    func createReminder(title: String, calendar: String, date: Date, isAllDay: Bool) -> Completable { .empty() }
+    func createReminder(title: String, calendar: String, date: Date, isAllDay: Bool, notes: String?, priority: Int) -> Completable { .empty() }
+    func createEvent(title: String, notes: String?, calendar: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Completable { .empty() }
 
     func completeReminder(id: String, complete: Bool) -> Completable { .empty() }
 

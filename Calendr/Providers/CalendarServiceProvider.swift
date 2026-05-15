@@ -23,7 +23,8 @@ protocol CalendarServiceProviding {
     func defaultCalendar(forNew type: CalendarEntityType) -> CalendarModel?
     func events(from start: Date, to end: Date, calendars: [String]) -> Single<[EventModel]>
 
-    func createReminder(title: String, calendar: String, date: Date, isAllDay: Bool) -> Completable
+    func createReminder(title: String, calendar: String, date: Date, isAllDay: Bool, notes: String?, priority: Int) -> Completable
+    func createEvent(title: String, notes: String?, calendar: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Completable
     func completeReminder(id: String, complete: Bool) -> Completable
     func rescheduleReminder(id: String, to: Date, isAllDay: Bool) -> Completable
 
@@ -266,7 +267,7 @@ class CalendarServiceProvider: CalendarServiceProviding {
         }
     }
 
-    func createReminder(title: String, calendar calendarId: String, date: Date, isAllDay: Bool) -> Completable {
+    func createReminder(title: String, calendar calendarId: String, date: Date, isAllDay: Bool, notes: String?, priority: Int) -> Completable {
 
         let dateComponents = dueDateComponents(for: date, isAllDay: isAllDay)
 
@@ -278,11 +279,38 @@ class CalendarServiceProvider: CalendarServiceProviding {
                 let reminder = EKReminder(eventStore: store)
                 reminder.calendar = calendar
                 reminder.title = title
+                reminder.notes = notes?.isEmpty == false ? notes : nil
+                reminder.priority = priority
                 reminder.dueDateComponents = dateComponents
                 if !isAllDay {
                     reminder.addAlarm(EKAlarm(absoluteDate: date))
                 }
                 try store.save(reminder, commit: true)
+                observer(.completed)
+            } catch {
+                observer(.error(error))
+            }
+
+            return Disposables.create()
+        }
+        .subscribe(on: ConcurrentDispatchQueueScheduler(qos: .userInteractive))
+    }
+
+    func createEvent(title: String, notes: String?, calendar calendarId: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Completable {
+
+        return Completable.create { [store] observer in
+            do {
+                guard let calendar = store.calendar(withIdentifier: calendarId) else {
+                    throw .unexpected("Missing calendar for events")
+                }
+                let event = EKEvent(eventStore: store)
+                event.calendar = calendar
+                event.title = title
+                event.notes = notes?.isEmpty == false ? notes : nil
+                event.isAllDay = isAllDay
+                event.startDate = startDate
+                event.endDate = isAllDay ? startDate : endDate
+                try store.save(event, span: .thisEvent)
                 observer(.completed)
             } catch {
                 observer(.error(error))
