@@ -206,8 +206,6 @@ struct ReminderDialog: View {
 
 // MARK: - DateRow
 
-/// Single row: [label] [.field DatePicker] [spacer] [Cả ngày?]
-/// User types directly into the native date/time fields — no popover or dropdown.
 private struct DateRow: View {
     let label: String
     @Binding var date: Date
@@ -216,23 +214,17 @@ private struct DateRow: View {
     var showAllDay: Bool = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Text(label)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
-            Group {
-                if let min = minDate {
-                    DatePicker("", selection: $date, in: min...,
-                               displayedComponents: allDay ? .date : [.date, .hourAndMinute])
-                } else {
-                    DatePicker("", selection: $date,
-                               displayedComponents: allDay ? .date : [.date, .hourAndMinute])
-                }
+            EditableDateField(date: $date, minDate: minDate)
+
+            if !allDay {
+                EditableTimeField(date: $date)
             }
-            .datePickerStyle(.field)
-            .labelsHidden()
 
             Spacer()
 
@@ -248,6 +240,104 @@ private struct DateRow: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 14)
+    }
+}
+
+private struct EditableDateField: View {
+    @Binding var date: Date
+    var minDate: Date?
+
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    private static let display = DateFormatter.make("dd/MM/yyyy")
+
+    var body: some View {
+        TextField("dd/MM/yyyy", text: $text)
+            .textFieldStyle(.plain)
+            .font(.system(size: 13).monospacedDigit())
+            .multilineTextAlignment(.center)
+            .focused($focused)
+            .onSubmit { commit() }
+            .onChange(of: focused) { _, on in if !on { commit() } }
+            .onAppear { text = Self.display.string(from: date) }
+            .onChange(of: date) { _, d in if !focused { text = Self.display.string(from: d) } }
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
+            .frame(width: 96)
+    }
+
+    private func commit() {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        for fmt in ["dd/MM/yyyy", "d/M/yyyy", "dd/MM/yy", "d/M/yy"] {
+            if let parsed = DateFormatter.make(fmt).date(from: t) {
+                var merged = mergeDate(parsed, into: date)
+                if let min = minDate, merged < min { merged = min }
+                date = merged
+                text = Self.display.string(from: date)
+                return
+            }
+        }
+        text = Self.display.string(from: date) // revert if unparseable
+    }
+
+    private func mergeDate(_ src: Date, into base: Date) -> Date {
+        let cal = Calendar.current
+        var c = cal.dateComponents([.hour, .minute, .second], from: base)
+        let d = cal.dateComponents([.year, .month, .day], from: src)
+        c.year = d.year; c.month = d.month; c.day = d.day
+        return cal.date(from: c) ?? base
+    }
+}
+
+private struct EditableTimeField: View {
+    @Binding var date: Date
+
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    private static let display = DateFormatter.make("HH:mm")
+
+    var body: some View {
+        TextField("HH:mm", text: $text)
+            .textFieldStyle(.plain)
+            .font(.system(size: 13).monospacedDigit())
+            .multilineTextAlignment(.center)
+            .focused($focused)
+            .onSubmit { commit() }
+            .onChange(of: focused) { _, on in if !on { commit() } }
+            .onAppear { text = Self.display.string(from: date) }
+            .onChange(of: date) { _, d in if !focused { text = Self.display.string(from: d) } }
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
+            .frame(width: 58)
+    }
+
+    private func commit() {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        for fmt in ["HH:mm", "H:mm", "HHmm", "Hmm"] {
+            if let parsed = DateFormatter.make(fmt).date(from: t) {
+                date = mergeTime(parsed, into: date)
+                text = Self.display.string(from: date)
+                return
+            }
+        }
+        text = Self.display.string(from: date) // revert if unparseable
+    }
+
+    private func mergeTime(_ src: Date, into base: Date) -> Date {
+        let cal = Calendar.current
+        var c = cal.dateComponents([.year, .month, .day], from: base)
+        c.hour = cal.component(.hour, from: src)
+        c.minute = cal.component(.minute, from: src)
+        c.second = 0
+        return cal.date(from: c) ?? base
+    }
+}
+
+private extension DateFormatter {
+    static func make(_ format: String) -> DateFormatter {
+        let f = DateFormatter(); f.dateFormat = format; return f
     }
 }
 
