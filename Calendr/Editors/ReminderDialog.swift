@@ -342,6 +342,7 @@ private struct _MaskInput: NSViewRepresentable {
         tf.focusRingType = .none
         tf.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         tf.alignment = .center
+        context.coordinator.textField = tf
         return tf
     }
 
@@ -360,6 +361,7 @@ private struct _MaskInput: NSViewRepresentable {
         var mode: Mode
         var binding: Binding<Date>
         var isEditing = false
+        weak var textField: NSTextField?   // stored in makeNSView for safe auto-commit
 
         init(mode: Mode, binding: Binding<Date>) {
             self.mode = mode; self.binding = binding
@@ -425,9 +427,8 @@ private struct _MaskInput: NSViewRepresentable {
 
             // Auto-commit when all digits are filled — no Enter needed
             if digits.count == mode.maxDigits {
-                DispatchQueue.main.async { [weak self, weak textView] in
-                    guard let self, let tv = textView,
-                          let tf = tv.superview?.superview as? NSTextField else { return }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, let tf = self.textField else { return }
                     self.commit(tf)
                 }
             }
@@ -445,9 +446,16 @@ private struct _MaskInput: NSViewRepresentable {
 
         private func maskedPos(digitIdx: Int, in masked: String) -> Int {
             var count = 0
-            for (i, c) in masked.enumerated() {
-                if count == digitIdx { return i }
-                if c.isNumber { count += 1 }
+            let chars = Array(masked)
+            for i in 0..<chars.count {
+                if count == digitIdx {
+                    // Skip any separator at this position so cursor lands
+                    // at the start of the next segment, not on the separator.
+                    var j = i
+                    while j < chars.count && !chars[j].isNumber { j += 1 }
+                    return j
+                }
+                if chars[i].isNumber { count += 1 }
             }
             return masked.count
         }
