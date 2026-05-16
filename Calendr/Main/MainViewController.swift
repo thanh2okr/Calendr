@@ -828,6 +828,9 @@ class MainViewController: NSViewController {
             case .command(.char("f")):
                 showSearchInput()
 
+            case .command(.char("n")):
+                openReminderEditor()
+
             case .escape where searchInput.hasFocus:
                 hideSearchInput()
 

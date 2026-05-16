@@ -201,6 +201,11 @@ struct ReminderDialog: View {
                 eventCalendarID = first.id
             }
         }
+        .onChange(of: startDate) { old, new in
+            guard kind == .event else { return }
+            let duration = endDate.timeIntervalSince(old)
+            endDate = new.addingTimeInterval(max(duration, 3600))
+        }
     }
 }
 
@@ -402,9 +407,22 @@ private struct TimePickerPopover: View {
     }
 
     private func commitText() {
-        let t = inputText.trimmingCharacters(in: .whitespaces)
-        for fmt in ["HH:mm", "H:mm", "HHmm", "Hmm"] {
-            let f = DateFormatter(); f.dateFormat = fmt
+        var t = inputText.trimmingCharacters(in: .whitespaces).lowercased()
+
+        // Normalize Vietnamese "h" separator: "15h30" → "15:30", "9h" → "9:00"
+        if let match = t.range(of: #"^(\d{1,2})h(\d{0,2})$"#, options: .regularExpression) {
+            let raw = String(t[match])
+            let parts = raw.dropFirst(0).components(separatedBy: "h")
+            let mins = parts.count > 1 && !parts[1].isEmpty ? parts[1] : "00"
+            t = "\(parts[0]):\(mins)"
+        }
+
+        // Try multiple formats; locale en_US_POSIX for am/pm
+        let formats = ["HH:mm", "H:mm", "HHmm", "Hmm", "h:mm a", "h:mma", "h a", "ha"]
+        for fmt in formats {
+            let f = DateFormatter()
+            f.dateFormat = fmt
+            f.locale = Locale(identifier: "en_US_POSIX")
             if let parsed = f.date(from: t) {
                 date = merged(time: parsed, into: date)
                 onDone()
@@ -440,6 +458,7 @@ private struct ReminderTitleCard: View {
     @Binding var notes: String
     let kind: ReminderKind
     let dotColor: Color
+    @FocusState private var titleFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -456,6 +475,10 @@ private struct ReminderTitleCard: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 15, weight: .semibold))
                 .lineLimit(1...3)
+                .focused($titleFocused)
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { titleFocused = true }
             }
 
             Divider().padding(.leading, 18).padding(.top, 6)
