@@ -216,6 +216,7 @@ private struct DateRow: View {
     var referenceDate: Date? = nil
     var showAllDay: Bool = false
 
+    @State private var showCalendar = false
     @State private var showTimePopover = false
 
     var body: some View {
@@ -225,13 +226,14 @@ private struct DateRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
-            // Overlay transparent .compact DatePicker on our chip so macOS 26
-            // native calendar flies up on click — no custom popover wrapper.
-            ZStack {
+            Button { showCalendar.toggle() } label: {
                 DateChipLabel(
                     systemImage: "calendar",
                     text: date.formatted(Date.FormatStyle().day(.twoDigits).month(.twoDigits).year())
                 )
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showCalendar, arrowEdge: .bottom) {
                 Group {
                     if let min = minDate {
                         DatePicker("", selection: $date, in: min..., displayedComponents: .date)
@@ -239,11 +241,11 @@ private struct DateRow: View {
                         DatePicker("", selection: $date, displayedComponents: .date)
                     }
                 }
-                .datePickerStyle(.compact)
+                .datePickerStyle(.graphical)
                 .labelsHidden()
-                .opacity(0.011)
+                .frame(width: 380, height: 380)
+                .padding(8)
             }
-            .fixedSize()
 
             if !allDay {
                 Button { showTimePopover.toggle() } label: {
