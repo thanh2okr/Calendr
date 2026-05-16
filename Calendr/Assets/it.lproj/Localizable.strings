@@ -1,6 +1,6 @@
 /* 
   Localizable.strings
-  Calendr
+  CalX
 
   Created by Albiji on 18/01/2023.
   Modified by @ilMagnifico on 23/12/2024. 
@@ -27,7 +27,7 @@
 //"auto_update.failed.download" = "Failed to download update";
 //"auto_update.failed.install" = "Failed to install update";
 
-"attachments.open.message" = "Calendr necessita del permesso per accedere ai tuoi allegati";
+"attachments.open.message" = "CalX necessita del permesso per accedere ai tuoi allegati";
 "attachments.open.authorize" = "Autorizza l’accesso agli allegati";
 
 "settings.title" = "Preferenze";

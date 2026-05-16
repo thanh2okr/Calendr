@@ -1,6 +1,6 @@
 /* 
   Localizable.strings
-  Calendr
+  CalX
 
   Created by Jerry on 29/04/2023.
 */
@@ -26,7 +26,7 @@
 "auto_update.failed.download" = "下载更新失败";
 "auto_update.failed.install" = "安装更新失败";
 
-"attachments.open.message" = "Calendr 需要权限才能访问您的附件";
+"attachments.open.message" = "CalX 需要权限才能访问您的附件";
 "attachments.open.authorize" = "授权以访问附件";
 
 "settings.title" = "设置";

@@ -120,9 +120,7 @@ struct ReminderDialog: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // ── Title bar ──────────────────────────────────────
             HStack(spacing: 0) {
-                // Close button thay cho traffic lights
                 Button(action: onCancel) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 13))
@@ -145,10 +143,8 @@ struct ReminderDialog: View {
             .frame(height: 38)
             .overlay(Divider(), alignment: .bottom)
 
-            // ── Body ───────────────────────────────────────────
             VStack(alignment: .leading, spacing: 0) {
 
-                // Kind segmented picker — centered
                 Picker("", selection: $kind) {
                     ForEach(ReminderKind.allCases) { k in
                         SwiftUI.Label(k.label, systemImage: k.systemImage).tag(k)
@@ -161,48 +157,28 @@ struct ReminderDialog: View {
                 .padding(.top, 10)
                 .padding(.bottom, 8)
 
-                // Title + Notes card
                 ReminderTitleCard(title: $title, notes: $notes, kind: kind, dotColor: currentItem.color)
                     .padding(.bottom, 8)
 
                 Divider()
 
-                // Date rows
-                if kind == .reminder {
-                    DialogRow(label: "Lịch hẹn") {
-                        DatePicker("", selection: $startDate,
-                                   displayedComponents: allDay ? .date : [.date, .hourAndMinute])
-                            .labelsHidden()
-                            .datePickerStyle(.field)
-                    }
-                    Divider()
-                    DialogRow(label: "Cả ngày") {
-                        Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
-                    }
-                } else {
-                    DialogRow(label: "Bắt đầu") {
-                        DatePicker("", selection: $startDate,
-                                   displayedComponents: allDay ? .date : [.date, .hourAndMinute])
-                            .labelsHidden()
-                            .datePickerStyle(.field)
-                    }
+                // Date rows — start always shown; end only for events; all-day always shown
+                DialogRow(label: kind == .reminder ? "Lịch hẹn" : "Bắt đầu") {
+                    NativeDatePicker(selection: $startDate, showTime: !allDay)
+                }
+                if kind == .event {
                     Divider()
                     DialogRow(label: "Kết thúc") {
-                        DatePicker("", selection: $endDate,
-                                   in: startDate...,
-                                   displayedComponents: allDay ? .date : [.date, .hourAndMinute])
-                            .labelsHidden()
-                            .datePickerStyle(.field)
+                        NativeDatePicker(selection: $endDate, showTime: !allDay, minDate: startDate)
                     }
-                    Divider()
-                    DialogRow(label: "Cả ngày") {
-                        Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
-                    }
+                }
+                Divider()
+                DialogRow(label: "Cả ngày") {
+                    Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
                 }
 
                 Divider()
 
-                // Calendar picker
                 if !currentCalendars.isEmpty {
                     DialogRow(label: "Lịch") {
                         ReminderCalendarMenu(items: currentCalendars, selection: currentCalendarID)
@@ -210,7 +186,6 @@ struct ReminderDialog: View {
                     Divider()
                 }
 
-                // Hashtags (reminders only)
                 if kind == .reminder {
                     DialogRow(label: "Hashtag", align: .top) {
                         ReminderHashtagField(tags: $tags)
@@ -218,7 +193,6 @@ struct ReminderDialog: View {
                     Divider()
                 }
 
-                // Priority
                 DialogRow(label: "Ưu tiên") {
                     ReminderPriorityMenu(selection: $priority)
                 }
@@ -226,7 +200,6 @@ struct ReminderDialog: View {
             .padding(.horizontal, 14)
             .frame(maxHeight: .infinity, alignment: .top)
 
-            // ── Footer ─────────────────────────────────────────
             HStack {
                 Spacer()
                 Button("Hủy") { onCancel() }
@@ -327,35 +300,19 @@ private struct ReminderTitleCard: View {
     }
 }
 
-private struct ReminderCalendarMenu: View {
-    let items: [DialogCalendarItem]
-    @Binding var selection: String
-
-    var current: DialogCalendarItem { items.first { $0.id == selection } ?? items[0] }
-    var grouped: [(String, [DialogCalendarItem])] {
-        Dictionary(grouping: items, by: \.group).sorted { $0.key < $1.key }
-    }
+/// Chip-style menu button shared by calendar and priority pickers.
+private struct ChipMenu<Icon: View, Content: View>: View {
+    @ViewBuilder let icon: () -> Icon
+    let label: String
+    @ViewBuilder let content: () -> Content
 
     var body: some View {
-        Menu {
-            ForEach(grouped, id: \.0) { group, list in
-                Section(group) {
-                    ForEach(list) { item in
-                        Button { selection = item.id } label: {
-                            SwiftUI.Label {
-                                Text(item.name)
-                            } icon: {
-                                Circle().fill(item.color)
-                            }
-                        }
-                    }
-                }
-            }
-        } label: {
+        Menu { content() } label: {
             HStack(spacing: 6) {
-                Circle().fill(current.color).frame(width: 9, height: 9)
-                Text(current.name).font(.system(size: 12.5, weight: .semibold))
-                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
+                icon()
+                Text(label).font(.system(size: 12.5, weight: .semibold))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 8).padding(.vertical, 4)
@@ -366,10 +323,53 @@ private struct ReminderCalendarMenu: View {
     }
 }
 
+private struct ReminderCalendarMenu: View {
+    let items: [DialogCalendarItem]
+    @Binding var selection: String
+
+    // Computed once per init — items is a `let`, never mutates after creation.
+    private let grouped: [(String, [DialogCalendarItem])]
+
+    init(items: [DialogCalendarItem], selection: Binding<String>) {
+        self.items = items
+        self._selection = selection
+        self.grouped = Dictionary(grouping: items, by: \.group).sorted { $0.key < $1.key }
+    }
+
+    private var current: DialogCalendarItem {
+        items.first { $0.id == selection } ?? items[0]
+    }
+
+    var body: some View {
+        ChipMenu(
+            icon: { Circle().fill(current.color).frame(width: 9, height: 9) },
+            label: current.name
+        ) {
+            ForEach(grouped, id: \.0) { group, list in
+                Section(group) {
+                    ForEach(list) { item in
+                        Button { selection = item.id } label: {
+                            SwiftUI.Label { Text(item.name) } icon: { Circle().fill(item.color) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 private struct ReminderPriorityMenu: View {
     @Binding var selection: ReminderPriority
+
     var body: some View {
-        Menu {
+        ChipMenu(
+            icon: {
+                Image(systemName: selection.systemImage)
+                    .foregroundStyle(selection.color)
+                    .font(.system(size: 11))
+            },
+            label: selection.label
+        ) {
             ForEach(ReminderPriority.allCases) { p in
                 Button { selection = p } label: {
                     SwiftUI.Label {
@@ -379,20 +379,7 @@ private struct ReminderPriorityMenu: View {
                     }
                 }
             }
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: selection.systemImage)
-                    .foregroundStyle(selection.color)
-                    .font(.system(size: 11))
-                Text(selection.label).font(.system(size: 12.5, weight: .semibold))
-                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
         }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
     }
 }
 
@@ -435,25 +422,71 @@ private struct ReminderHashtagField: View {
 
 private struct ReminderFlowLayout: Layout {
     var spacing: CGFloat = 4
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+
+    // Cache subview sizes so placeSubviews doesn't remeasure.
+    struct Cache { var sizes: [CGSize] = [] }
+    func makeCache(subviews: Subviews) -> Cache {
+        Cache(sizes: subviews.map { $0.sizeThatFits(.unspecified) })
+    }
+    func updateCache(_ cache: inout Cache, subviews: Subviews) {
+        cache.sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
         let maxW = proposal.width ?? .infinity
         var x: CGFloat = 0, y: CGFloat = 0, rowH: CGFloat = 0
-        for sv in subviews {
-            let sz = sv.sizeThatFits(.unspecified)
+        for sz in cache.sizes {
             if x + sz.width > maxW { x = 0; y += rowH + spacing; rowH = 0 }
             x += sz.width + spacing; rowH = max(rowH, sz.height)
         }
         return CGSize(width: maxW, height: y + rowH)
     }
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
         let maxW = bounds.width
         var x = bounds.minX, y = bounds.minY, rowH: CGFloat = 0
-        for sv in subviews {
-            let sz = sv.sizeThatFits(.unspecified)
+        for (sv, sz) in zip(subviews, cache.sizes) {
             if x - bounds.minX + sz.width > maxW { x = bounds.minX; y += rowH + spacing; rowH = 0 }
             sv.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
             x += sz.width + spacing; rowH = max(rowH, sz.height)
         }
+    }
+}
+
+// MARK: - NativeDatePicker
+
+/// NSDatePicker wrapped in NSViewRepresentable using .textFieldAndStepper style.
+/// This avoids the macOS 26 calendar popup that SwiftUI DatePicker(.field) opens on click.
+private struct NativeDatePicker: NSViewRepresentable {
+    @Binding var selection: Date
+    var showTime: Bool = true
+    var minDate: Date? = nil
+
+    func makeNSView(context: Context) -> NSDatePicker {
+        let picker = NSDatePicker()
+        picker.datePickerStyle = .textFieldAndStepper
+        picker.presentsCalendarOverlay = false
+        picker.isBezeled = false
+        picker.isBordered = false
+        picker.drawsBackground = false
+        picker.target = context.coordinator
+        picker.action = #selector(Coordinator.dateChanged(_:))
+        return picker
+    }
+
+    func updateNSView(_ picker: NSDatePicker, context: Context) {
+        picker.datePickerElements = showTime ? [.yearMonthDay, .hourMinute] : .yearMonthDay
+        if let min = minDate { picker.minDate = min }
+        if picker.dateValue != selection { picker.dateValue = selection }
+        context.coordinator.selection = $selection
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(selection: $selection) }
+
+    class Coordinator: NSObject {
+        var selection: Binding<Date>
+        init(selection: Binding<Date>) { self.selection = selection }
+        @objc func dateChanged(_ picker: NSDatePicker) { selection.wrappedValue = picker.dateValue }
     }
 }
 

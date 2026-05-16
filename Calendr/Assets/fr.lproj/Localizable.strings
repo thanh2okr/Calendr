@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Calendr
+  CalX
 
   Created by Paker on 20/02/2021.
 */
@@ -8,7 +8,7 @@
 "quit" = "Quitter";
 "search" = "Rechercher";
 
-"access_required.calendars" = "Calendrier en attente d'autorisation 'Accès complet'";
+"access_required.calendars" = "CalXier en attente d'autorisation 'Accès complet'";
 "access_required.reminders" = "Rappels en attente d'autorisation";
 "access_required.open_settings" = "Ouvrir les paramètres";
 "access_required.cancel" = "Annuler";
@@ -26,13 +26,13 @@
 //"auto_update.failed.download" = "Failed to download update";
 //"auto_update.failed.install" = "Failed to install update";
 
-"attachments.open.message" = "Calendr a besoin de l'autorisation pour accéder à vos pièces jointes";
+"attachments.open.message" = "CalX a besoin de l'autorisation pour accéder à vos pièces jointes";
 "attachments.open.authorize" = "Autoriser l'accès aux pièces jointes";
 
 "settings.title" = "Préférences";
 "settings.tab.general" = "Général";
 "settings.tab.appearance" = "Apparence";
-"settings.tab.calendars" = "Calendriers";
+"settings.tab.calendars" = "CalXiers";
 "settings.tab.keyboard" = "Raccourcis";
 "settings.tab.about" = "À propos";
 
@@ -51,16 +51,16 @@
 "settings.next_event.grab_attention.sound" = "Jouer le son";
 "settings.next_event.detect_notch" = "Raccourcir si 'notch' est présent";
 
-"settings.calendar" = "Calendrier";
+"settings.calendar" = "CalXier";
 //"settings.calendar.show_month_outline" = "Show month outline";
 "settings.calendar.show_week_numbers" = "Afficher les numéros des semaines";
 "settings.calendar.preserve_selected_date" = "Conserver la date sélectionnée lors du masquage";
 "settings.calendar.show_declined_events" = "Afficher les événements refusés";
-"settings.calendar.show_declined_events_tooltip" = "Cela ne fonctionne que s'il est également activé dans l'application Calendrier native.";
+"settings.calendar.show_declined_events_tooltip" = "Cela ne fonctionne que s'il est également activé dans l'application CalXier native.";
 "settings.calendar.date_hover_option" = "Maintenir ⌥ pour avoir un aperçu des dates survolées";
 "settings.calendar.week_count" = "Semaines visibles";
-"settings.calendar.calendar_app_view_mode" = "Vue de l'app Calendrier";
-"settings.calendar.default_calendar_app" = "Calendrier par défaut";
+"settings.calendar.calendar_app_view_mode" = "Vue de l'app CalXier";
+"settings.calendar.default_calendar_app" = "CalXier par défaut";
 
 //"settings.calendar.event_dots" = "Event dots";
 //"settings.calendar.event_dots.none" = "none";
@@ -150,7 +150,7 @@
 
 "tooltips.toolbar.stay_open" = "Maintenir ouvert";
 "tooltips.toolbar.create" = "Créer";
-"tooltips.toolbar.open_calendar" = "Ouvrir Calendrier";
+"tooltips.toolbar.open_calendar" = "Ouvrir CalXier";
 "tooltips.toolbar.open_reminders" = "Ouvrir Rappels";
 "tooltips.toolbar.open_menu" = "Ouvrir le menu";
 

@@ -1,6 +1,6 @@
 /* 
   Localizable.strings
-  Calendr
+  CalX
 
   Created by Petros Dhespollari on 08/02/2025.
   Updated by Pavel Bychko on 08/02/2025.
@@ -28,7 +28,7 @@
 "auto_update.failed.download" = "Не удалось загрузить обновление";
 "auto_update.failed.install" = "Не удалось установить обновление";
 
-"attachments.open.message" = "Приложению Calendr нужно разрешение на доступ к вложениям";
+"attachments.open.message" = "Приложению CalX нужно разрешение на доступ к вложениям";
 "attachments.open.authorize" = "Разрешить доступ к вложениям";
 
 "settings.title" = "Настройки";

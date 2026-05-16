@@ -580,16 +580,11 @@ class MainViewController: NSViewController {
         viewController.isResizable = false
         viewController.delegate = viewModel
 
-        // macOS 26 Liquid Glass: xóa hoàn toàn chrome, dialog tự render rounded card
         viewController.windowConfiguration = { window in
-            window.styleMask = [.fullSizeContentView]
+            window.styleMask = [.borderless]
             window.backgroundColor = .clear
             window.isMovableByWindowBackground = true
             window.isOpaque = false
-            // Ẩn traffic-light buttons (vẫn còn trong view hierarchy khi có .titled)
-            window.standardWindowButton(.closeButton)?.isHidden = true
-            window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-            window.standardWindowButton(.zoomButton)?.isHidden = true
         }
 
         viewModel.onCloseConfirmed = { [weak viewController] in

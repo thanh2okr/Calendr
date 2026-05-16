@@ -1,6 +1,6 @@
 /* 
   Localizable.strings
-  Calendr
+  CalX
 */
 
 "quit" = "Afsluiten";
@@ -24,7 +24,7 @@
 //"auto_update.failed.download" = "Failed to download update";
 //"auto_update.failed.install" = "Failed to install update";
 
-"attachments.open.message" = "Calendr heeft toestemming nodig om toegang te krijgen tot uw bijlagen";
+"attachments.open.message" = "CalX heeft toestemming nodig om toegang te krijgen tot uw bijlagen";
 "attachments.open.authorize" = "Toegang tot bijlagen toestaan";
 
 "settings.title" = "Voorkeuren";

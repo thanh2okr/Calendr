@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Calendr
+  CalX
 
   Created by yesnt10 on 03/02/2025.
 */
@@ -26,7 +26,7 @@
 "auto_update.failed.download" = "Güncellemeler indirilemedi";
 "auto_update.failed.install" = "Güncellemeler yüklenemedi";
 
-"attachments.open.message" = "Calendr, eklerinize erişmek için izin istiyor.";
+"attachments.open.message" = "CalX, eklerinize erişmek için izin istiyor.";
 "attachments.open.authorize" = "Eklere erişime izni ver";
 
 "settings.title" = "Tercihler";

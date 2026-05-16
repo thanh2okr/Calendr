@@ -1,6 +1,6 @@
 /* 
   Localizable.strings
-  Calendr
+  CalX
 
   Created by Tomáš Švec on 28/03/2024.
 */
@@ -26,7 +26,7 @@
 "auto_update.failed.download" = "Stiahnutie aktualizácie zlyhalo";
 "auto_update.failed.install" = "Inštalácia aktualizácie zlyhala";
 
-"attachments.open.message" = "Calendr potrebuje povolenie na prístup k tvojim prílohám";
+"attachments.open.message" = "CalX potrebuje povolenie na prístup k tvojim prílohám";
 "attachments.open.authorize" = "Povoliť prístup k prílohám";
 
 "settings.title" = "Nastavenia";

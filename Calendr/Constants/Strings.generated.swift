@@ -11,7 +11,7 @@ import Foundation
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum Strings {
   /// Localizable.strings
-  ///   Calendr
+  ///   CalX
   /// 
   ///   Created by Paker on 20/02/2021.
   internal static let quit = Strings.tr("Localizable", "quit", fallback: "Quit")
@@ -31,8 +31,8 @@ internal enum Strings {
     internal enum Open {
       /// Authorize access to attachments
       internal static let authorize = Strings.tr("Localizable", "attachments.open.authorize", fallback: "Authorize access to attachments")
-      /// Calendr needs permission to access your attachments
-      internal static let message = Strings.tr("Localizable", "attachments.open.message", fallback: "Calendr needs permission to access your attachments")
+      /// CalX needs permission to access your attachments
+      internal static let message = Strings.tr("Localizable", "attachments.open.message", fallback: "CalX needs permission to access your attachments")
     }
   }
   internal enum AutoUpdate {

@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Calendr
+  CalX
 
   Created by Chaim-Chv on 27/05/2025
 */
@@ -26,7 +26,7 @@
 "auto_update.failed.download" = "הורדת העדכון נכשלה";
 "auto_update.failed.install" = "התקנת העדכון נכשלה";
 
-"attachments.open.message" = "‏Calendr זקוק להרשאה כדי לגשת לקבצים המצורפים שלך";
+"attachments.open.message" = "‏CalX זקוק להרשאה כדי לגשת לקבצים המצורפים שלך";
 "attachments.open.authorize" = "הענק הרשאה לקבצים מצורפים";
 
 "settings.title" = "הגדרות";
