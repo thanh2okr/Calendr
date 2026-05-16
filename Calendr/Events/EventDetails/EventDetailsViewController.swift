@@ -671,15 +671,11 @@ class EventDetailsViewController: NSViewController, PopoverDelegate, MKMapViewDe
 
     private func setUpBindings() {
 
-        let popoverView = view.rx.observe(\.superview)
-            .compactMap { $0 as? NSVisualEffectView }
+        view.rx.observe(\.superview)
+            .compactMap { $0 as? NSGlassEffectView }
             .take(1)
-
-        Observable.combineLatest(
-            popoverView, viewModel.settings.popoverMaterial
-        )
-        .bind { $0.material = $1 }
-        .disposed(by: disposeBag)
+            .bind { $0.style = .regular }
+            .disposed(by: disposeBag)
 
         viewModel.close
             .observe(on: MainScheduler.instance)

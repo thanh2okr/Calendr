@@ -208,6 +208,8 @@ class EventView: NSView {
         birthdayIcon.isHidden = true
         birthdayIcon.contentTintColor = .systemRed
 
+        recurrenceIcon.isHidden = true
+
         title.forceVibrancy = false
         title.lineBreakMode = .byWordWrapping
         title.textColor = .headerTextColor

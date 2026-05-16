@@ -981,22 +981,24 @@ class MainViewController: NSViewController {
                 return
             }
 
-            let index = items.firstIndex {
-                guard
-                    case .event(let event) = $0,
-                    !event.isAllDay,
-                    dateProvider.isDateInToday(event.start),
-                    let isFinished = event.isFaded.lastValue()
-                else {
-                    return false
+            // Find the "Hôm nay" section — first non-overdue, non-allday section
+            let todaySectionIndex = items.firstIndex { item in
+                if case .section(let text, let isOverdue) = item {
+                    return !isOverdue && text != Strings.Event.allDay
                 }
-                return !isFinished
-            } ?? items.count - 1
+                return false
+            }
 
-            guard let rect = eventListView.childRect(at: index) else { return }
+            guard let index = todaySectionIndex, let rect = eventListView.childRect(at: index) else {
+                eventListView.scrollTop()
+                return
+            }
 
-            let newOriginY = rect.midY - eventListView.bounds.height + scrollView.bounds.height / 2
-            let newOrigin = NSPoint(x: 0, y: newOriginY)
+            // Position the "Hôm nay" section at the top of the visible area
+            let targetY = eventListView.isFlipped
+                ? rect.minY
+                : max(0, rect.maxY - scrollView.bounds.height)
+            let newOrigin = NSPoint(x: 0, y: targetY)
 
             NSAnimationContext.runAnimationGroup({ context in
                 context.duration = 0.3
