@@ -120,86 +120,55 @@ struct ReminderDialog: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            HStack(spacing: 0) {
-                Button(action: onCancel) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.tertiary)
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, 14)
-
-                Spacer()
-
-                Text(kind == .event ? "Sự kiện mới" : "Nhắc nhở mới")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                // Balance spacer to keep title centered
-                Color.clear.frame(width: 27)
-            }
-            .frame(height: 38)
-            .overlay(Divider(), alignment: .bottom)
-
-            VStack(alignment: .leading, spacing: 0) {
-
-                Picker("", selection: $kind) {
-                    ForEach(ReminderKind.allCases) { k in
-                        SwiftUI.Label(k.label, systemImage: k.systemImage).tag(k)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 220)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 10)
-                .padding(.bottom, 8)
-
-                ReminderTitleCard(title: $title, notes: $notes, kind: kind, dotColor: currentItem.color)
-                    .padding(.bottom, 8)
-
-                Divider()
-
-                // Date rows — start always shown; end only for events; all-day always shown
-                DialogRow(label: kind == .reminder ? "Lịch hẹn" : "Bắt đầu") {
-                    DatePickerRow(date: $startDate, showTime: !allDay)
-                }
-                if kind == .event {
-                    Divider()
-                    DialogRow(label: "Kết thúc") {
-                        DatePickerRow(date: $endDate, showTime: !allDay, minDate: startDate)
-                    }
-                }
-                Divider()
-                DialogRow(label: "Cả ngày") {
-                    Toggle("", isOn: $allDay).labelsHidden().toggleStyle(.switch).controlSize(.mini)
-                }
-
-                Divider()
-
-                if !currentCalendars.isEmpty {
-                    DialogRow(label: "Lịch") {
-                        ReminderCalendarMenu(items: currentCalendars, selection: currentCalendarID)
-                    }
-                    Divider()
-                }
-
-                if kind == .reminder {
-                    DialogRow(label: "Hashtag", align: .top) {
-                        ReminderHashtagField(tags: $tags)
-                    }
-                    Divider()
-                }
-
-                DialogRow(label: "Ưu tiên") {
-                    ReminderPriorityMenu(selection: $priority)
+            // Kind picker
+            Picker("", selection: $kind) {
+                ForEach(ReminderKind.allCases) { k in
+                    SwiftUI.Label(k.label, systemImage: k.systemImage).tag(k)
                 }
             }
-            .padding(.horizontal, 14)
-            .frame(maxHeight: .infinity, alignment: .top)
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 240)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 14)
 
+            // Title + Notes card
+            ReminderTitleCard(title: $title, notes: $notes, kind: kind, dotColor: currentItem.color)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 10)
+
+            Divider()
+
+            // Date section — start row has "Cả ngày" toggle; events add an end row
+            if kind == .reminder {
+                DateRow(label: "Lịch hẹn", date: $startDate, allDay: $allDay, showAllDay: true)
+            } else {
+                DateRow(label: "Bắt đầu", date: $startDate, allDay: $allDay, showAllDay: true)
+                Divider()
+                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate)
+            }
+
+            Divider()
+
+            if !currentCalendars.isEmpty {
+                DialogRow(label: "Lịch") {
+                    ReminderCalendarMenu(items: currentCalendars, selection: currentCalendarID)
+                }
+                Divider()
+            }
+
+            if kind == .reminder {
+                DialogRow(label: "Hashtag", align: .top) {
+                    ReminderHashtagField(tags: $tags)
+                }
+                Divider()
+            }
+
+            DialogRow(label: "Ưu tiên") {
+                ReminderPriorityMenu(selection: $priority)
+            }
+
+            // Footer
             HStack {
                 Spacer()
                 Button("Hủy") { onCancel() }
@@ -221,10 +190,7 @@ struct ReminderDialog: View {
             .background(.primary.opacity(0.05))
             .overlay(Divider(), alignment: .top)
         }
-        .frame(width: 420, height: 460)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: .black.opacity(0.3), radius: 40, y: 16)
+        .frame(width: 500)
         .onChange(of: reminderCalendars) { _, newCalendars in
             if reminderCalendarID.isEmpty, let first = newCalendars.first {
                 reminderCalendarID = first.id
@@ -238,9 +204,137 @@ struct ReminderDialog: View {
     }
 }
 
+// MARK: - DateRow
+
+/// Single row: [label] [date chip] [time chip?] [spacer] [Cả ngày?]
+/// Each chip opens its own floating popover; time chip hidden when allDay.
+private struct DateRow: View {
+    let label: String
+    @Binding var date: Date
+    @Binding var allDay: Bool
+    var minDate: Date? = nil
+    var showAllDay: Bool = false
+
+    @State private var showDatePopover = false
+    @State private var showTimePopover = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 60, alignment: .leading)
+
+            Button { showDatePopover.toggle() } label: {
+                DateChipLabel(systemImage: "calendar", text: date.formatted(Date.FormatStyle().day(.twoDigits).month(.twoDigits).year()))
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showDatePopover, arrowEdge: .bottom) {
+                CalendarPopover(date: $date, minDate: minDate) { showDatePopover = false }
+            }
+
+            if !allDay {
+                Button { showTimePopover.toggle() } label: {
+                    DateChipLabel(systemImage: "clock", text: date.formatted(.dateTime.hour().minute()))
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showTimePopover, arrowEdge: .bottom) {
+                    TimePickerPopover(date: $date) { showTimePopover = false }
+                }
+            }
+
+            Spacer()
+
+            if showAllDay {
+                Text("Cả ngày")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Toggle("", isOn: $allDay)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+            }
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+    }
+}
+
+private struct DateChipLabel: View {
+    let systemImage: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: systemImage).font(.system(size: 11))
+            Text(text).font(.system(size: 12.5, weight: .medium))
+        }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 9).padding(.vertical, 5)
+        .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
+    }
+}
+
+private struct CalendarPopover: View {
+    @Binding var date: Date
+    var minDate: Date?
+    var onDone: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Group {
+                if let min = minDate {
+                    DatePicker("", selection: $date, in: min..., displayedComponents: .date)
+                } else {
+                    DatePicker("", selection: $date, displayedComponents: .date)
+                }
+            }
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            .padding(.horizontal, 4)
+            .padding(.top, 4)
+
+            Divider()
+            HStack {
+                Spacer()
+                Button("Xong") { onDone() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(8)
+        }
+        .frame(width: 260)
+    }
+}
+
+private struct TimePickerPopover: View {
+    @Binding var date: Date
+    var onDone: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
+                .datePickerStyle(.stepperField)
+                .labelsHidden()
+                .padding(16)
+
+            Divider()
+            HStack {
+                Spacer()
+                Button("Xong") { onDone() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(8)
+        }
+        .frame(width: 180)
+    }
+}
+
 // MARK: - Components
 
-/// Row căn trái: [label 60px] [content]
 private struct DialogRow<Content: View>: View {
     let label: String
     var align: VerticalAlignment = .center
@@ -256,6 +350,7 @@ private struct DialogRow<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 8)
+        .padding(.horizontal, 14)
     }
 }
 
@@ -284,7 +379,7 @@ private struct ReminderTitleCard: View {
 
             Divider().padding(.leading, 18).padding(.top, 6)
 
-            TextField("Ghi chú…", text: $notes, axis: .vertical)
+            TextField("Mô tả chi tiết, ghi chú thêm…", text: $notes, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
@@ -300,7 +395,8 @@ private struct ReminderTitleCard: View {
     }
 }
 
-/// Chip-style menu button shared by calendar and priority pickers.
+// MARK: - Chip menus
+
 private struct ChipMenu<Icon: View, Content: View>: View {
     @ViewBuilder let icon: () -> Icon
     let label: String
@@ -327,7 +423,6 @@ private struct ReminderCalendarMenu: View {
     let items: [DialogCalendarItem]
     @Binding var selection: String
 
-    // Computed once per init — items is a `let`, never mutates after creation.
     private let grouped: [(String, [DialogCalendarItem])]
 
     init(items: [DialogCalendarItem], selection: Binding<String>) {
@@ -383,6 +478,8 @@ private struct ReminderPriorityMenu: View {
     }
 }
 
+// MARK: - Hashtag field
+
 private struct ReminderHashtagField: View {
     @Binding var tags: [String]
     @State private var draft: String = ""
@@ -423,7 +520,6 @@ private struct ReminderHashtagField: View {
 private struct ReminderFlowLayout: Layout {
     var spacing: CGFloat = 4
 
-    // Cache subview sizes so placeSubviews doesn't remeasure.
     struct Cache { var sizes: [CGSize] = [] }
     func makeCache(subviews: Subviews) -> Cache {
         Cache(sizes: subviews.map { $0.sizeThatFits(.unspecified) })
@@ -450,123 +546,6 @@ private struct ReminderFlowLayout: Layout {
             sv.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
             x += sz.width + spacing; rowH = max(rowH, sz.height)
         }
-    }
-}
-
-// MARK: - DatePickerRow
-
-/// Text-field stepper + calendar icon that opens a floating popover.
-/// Popover has a graphical calendar (date) and, when showTime, a separate
-/// field picker for time — avoiding the macOS 26 inline-overlay issue.
-private struct DatePickerRow: View {
-    @Binding var date: Date
-    var showTime: Bool = true
-    var minDate: Date? = nil
-
-    @State private var showPopover = false
-
-    var body: some View {
-        HStack(spacing: 8) {
-            NativeDatePicker(selection: $date, showTime: showTime, minDate: minDate)
-            Button { showPopover.toggle() } label: {
-                Image(systemName: "calendar")
-                    .font(.system(size: 12))
-                    .foregroundStyle(showPopover ? .primary : .secondary)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-                DatePickerPopover(date: $date, showTime: showTime, minDate: minDate) {
-                    showPopover = false
-                }
-            }
-        }
-    }
-}
-
-private struct DatePickerPopover: View {
-    @Binding var date: Date
-    var showTime: Bool
-    var minDate: Date?
-    var onDone: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Graphical calendar — date only
-            Group {
-                if let min = minDate {
-                    DatePicker("", selection: $date, in: min..., displayedComponents: .date)
-                } else {
-                    DatePicker("", selection: $date, displayedComponents: .date)
-                }
-            }
-            .datePickerStyle(.graphical)
-            .labelsHidden()
-            .padding(.horizontal, 8)
-            .padding(.top, 4)
-
-            if showTime {
-                Divider()
-                HStack {
-                    Text("Giờ")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                        .datePickerStyle(.field)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-            }
-
-            Divider()
-            HStack {
-                Spacer()
-                Button("Xong") { onDone() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .keyboardShortcut(.defaultAction)
-            }
-            .padding(8)
-        }
-        .frame(width: 260)
-    }
-}
-
-// MARK: - NativeDatePicker
-
-/// NSDatePicker wrapped in NSViewRepresentable using .textFieldAndStepper style.
-/// Calendar overlay disabled — DatePickerRow handles it via SwiftUI popover instead.
-private struct NativeDatePicker: NSViewRepresentable {
-    @Binding var selection: Date
-    var showTime: Bool = true
-    var minDate: Date? = nil
-
-    func makeNSView(context: Context) -> NSDatePicker {
-        let picker = NSDatePicker()
-        picker.datePickerStyle = .textFieldAndStepper
-        picker.presentsCalendarOverlay = false
-        picker.isBezeled = false
-        picker.isBordered = false
-        picker.drawsBackground = false
-        picker.target = context.coordinator
-        picker.action = #selector(Coordinator.dateChanged(_:))
-        return picker
-    }
-
-    func updateNSView(_ picker: NSDatePicker, context: Context) {
-        picker.datePickerElements = showTime ? [.yearMonthDay, .hourMinute] : .yearMonthDay
-        if let min = minDate { picker.minDate = min }
-        if picker.dateValue != selection { picker.dateValue = selection }
-        context.coordinator.selection = $selection
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(selection: $selection) }
-
-    class Coordinator: NSObject {
-        var selection: Binding<Date>
-        init(selection: Binding<Date>) { self.selection = selection }
-        @objc func dateChanged(_ picker: NSDatePicker) { selection.wrappedValue = picker.dateValue }
     }
 }
 
@@ -600,8 +579,6 @@ extension [CalendarSection] {
         onSave: { _ in },
         onCancel: {}
     )
-    .padding(40)
-    .background(Color(nsColor: .windowBackgroundColor))
 }
 
 #endif

@@ -580,11 +580,10 @@ class MainViewController: NSViewController {
         viewController.isResizable = false
         viewController.delegate = viewModel
 
+        let initialTitle = viewModel.initialKind == .event ? "Sự kiện mới" : "Nhắc nhở mới"
         viewController.windowConfiguration = { window in
-            window.styleMask = [.borderless]
-            window.backgroundColor = .clear
+            window.title = initialTitle
             window.isMovableByWindowBackground = true
-            window.isOpaque = false
         }
 
         viewModel.onCloseConfirmed = { [weak viewController] in
