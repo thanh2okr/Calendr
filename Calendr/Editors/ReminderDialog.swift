@@ -455,9 +455,9 @@ private struct ReminderFlowLayout: Layout {
 
 // MARK: - DatePickerRow
 
-/// Text-field stepper + calendar icon button that opens a floating SwiftUI popover.
-/// NSDatePicker inline overlay is disabled — the popover is the only calendar entry point,
-/// ensuring it always floats above the dialog rather than expanding inside it.
+/// Text-field stepper + calendar icon that opens a floating popover.
+/// Popover has a graphical calendar (date) and, when showTime, a separate
+/// field picker for time — avoiding the macOS 26 inline-overlay issue.
 private struct DatePickerRow: View {
     @Binding var date: Date
     var showTime: Bool = true
@@ -468,29 +468,68 @@ private struct DatePickerRow: View {
     var body: some View {
         HStack(spacing: 8) {
             NativeDatePicker(selection: $date, showTime: showTime, minDate: minDate)
-            Button {
-                showPopover.toggle()
-            } label: {
+            Button { showPopover.toggle() } label: {
                 Image(systemName: "calendar")
                     .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(showPopover ? .primary : .secondary)
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-                VStack(spacing: 0) {
-                    DatePicker(
-                        "",
-                        selection: $date,
-                        in: minDate.map { $0... } ?? (Date.distantPast...),
-                        displayedComponents: showTime ? [.date, .hourAndMinute] : .date
-                    )
-                    .datePickerStyle(.graphical)
-                    .labelsHidden()
-                    .padding(12)
+                DatePickerPopover(date: $date, showTime: showTime, minDate: minDate) {
+                    showPopover = false
                 }
-                .onChange(of: date) { _, _ in showPopover = false }
             }
         }
+    }
+}
+
+private struct DatePickerPopover: View {
+    @Binding var date: Date
+    var showTime: Bool
+    var minDate: Date?
+    var onDone: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Graphical calendar — date only
+            Group {
+                if let min = minDate {
+                    DatePicker("", selection: $date, in: min..., displayedComponents: .date)
+                } else {
+                    DatePicker("", selection: $date, displayedComponents: .date)
+                }
+            }
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            .padding(.horizontal, 8)
+            .padding(.top, 4)
+
+            if showTime {
+                Divider()
+                HStack {
+                    Text("Giờ")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                        .datePickerStyle(.field)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+            }
+
+            Divider()
+            HStack {
+                Spacer()
+                Button("Xong") { onDone() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .keyboardShortcut(.defaultAction)
+            }
+            .padding(8)
+        }
+        .frame(width: 260)
     }
 }
 
