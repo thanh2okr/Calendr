@@ -220,10 +220,10 @@ private struct DateRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
-            EditableDateField(date: $date, minDate: minDate)
+            DateMaskField(date: $date, minDate: minDate)
 
             if !allDay {
-                EditableTimeField(date: $date)
+                TimeMaskField(date: $date)
             }
 
             Spacer()
@@ -243,42 +243,56 @@ private struct DateRow: View {
     }
 }
 
-private struct EditableDateField: View {
+/// Date input with auto-mask: digits only, slashes inserted automatically.
+/// Typing "12092026" produces "12/09/2026". Backspace works naturally.
+/// Commits on Enter or blur; reverts on invalid input.
+private struct DateMaskField: View {
     @Binding var date: Date
     var minDate: Date?
 
     @State private var text = ""
     @FocusState private var focused: Bool
 
-    private static let display = DateFormatter.make("dd/MM/yyyy")
-
     var body: some View {
-        TextField("dd/MM/yyyy", text: $text)
+        TextField("dd/mm/yyyy", text: $text)
             .textFieldStyle(.plain)
             .font(.system(size: 13).monospacedDigit())
             .multilineTextAlignment(.center)
             .focused($focused)
             .onSubmit { commit() }
             .onChange(of: focused) { _, on in if !on { commit() } }
-            .onAppear { text = Self.display.string(from: date) }
-            .onChange(of: date) { _, d in if !focused { text = Self.display.string(from: d) } }
+            .onChange(of: text) { _, new in applyMask(new) }
+            .onAppear { text = display(date) }
+            .onChange(of: date) { _, d in if !focused { text = display(d) } }
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
             .frame(width: 96)
     }
 
-    private func commit() {
-        let t = text.trimmingCharacters(in: .whitespaces)
-        for fmt in ["dd/MM/yyyy", "d/M/yyyy", "dd/MM/yy", "d/M/yy"] {
-            if let parsed = DateFormatter.make(fmt).date(from: t) {
-                var merged = mergeDate(parsed, into: date)
-                if let min = minDate, merged < min { merged = min }
-                date = merged
-                text = Self.display.string(from: date)
-                return
-            }
+    private func display(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "dd/MM/yyyy"; return f.string(from: d)
+    }
+
+    private func applyMask(_ new: String) {
+        let digits = String(new.filter(\.isNumber).prefix(8))
+        var masked = ""
+        for (i, c) in digits.enumerated() {
+            if i == 2 || i == 4 { masked += "/" }
+            masked += String(c)
         }
-        text = Self.display.string(from: date) // revert if unparseable
+        if text != masked { text = masked }
+    }
+
+    private func commit() {
+        let digits = text.filter(\.isNumber)
+        let f = DateFormatter(); f.dateFormat = "ddMMyyyy"
+        guard digits.count == 8, let parsed = f.date(from: digits) else {
+            text = display(date); return
+        }
+        var merged = mergeDate(parsed, into: date)
+        if let min = minDate, merged < min { merged = min }
+        date = merged
+        text = display(date)
     }
 
     private func mergeDate(_ src: Date, into base: Date) -> Date {
@@ -290,54 +304,56 @@ private struct EditableDateField: View {
     }
 }
 
-private struct EditableTimeField: View {
+/// Time input with auto-mask: digits only, colon inserted automatically.
+/// Typing "2130" produces "21:30". Validates hour 0–23, minute 0–59.
+private struct TimeMaskField: View {
     @Binding var date: Date
 
     @State private var text = ""
     @FocusState private var focused: Bool
 
-    private static let display = DateFormatter.make("HH:mm")
-
     var body: some View {
-        TextField("HH:mm", text: $text)
+        TextField("hh:mm", text: $text)
             .textFieldStyle(.plain)
             .font(.system(size: 13).monospacedDigit())
             .multilineTextAlignment(.center)
             .focused($focused)
             .onSubmit { commit() }
             .onChange(of: focused) { _, on in if !on { commit() } }
-            .onAppear { text = Self.display.string(from: date) }
-            .onChange(of: date) { _, d in if !focused { text = Self.display.string(from: d) } }
+            .onChange(of: text) { _, new in applyMask(new) }
+            .onAppear { text = display(date) }
+            .onChange(of: date) { _, d in if !focused { text = display(d) } }
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
             .frame(width: 58)
     }
 
-    private func commit() {
-        let t = text.trimmingCharacters(in: .whitespaces)
-        for fmt in ["HH:mm", "H:mm", "HHmm", "Hmm"] {
-            if let parsed = DateFormatter.make(fmt).date(from: t) {
-                date = mergeTime(parsed, into: date)
-                text = Self.display.string(from: date)
-                return
-            }
+    private func display(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
+    }
+
+    private func applyMask(_ new: String) {
+        let digits = String(new.filter(\.isNumber).prefix(4))
+        var masked = ""
+        for (i, c) in digits.enumerated() {
+            if i == 2 { masked += ":" }
+            masked += String(c)
         }
-        text = Self.display.string(from: date) // revert if unparseable
+        if text != masked { text = masked }
     }
 
-    private func mergeTime(_ src: Date, into base: Date) -> Date {
+    private func commit() {
+        let digits = text.filter(\.isNumber)
+        guard digits.count == 4,
+              let h = Int(digits.prefix(2)), h <= 23,
+              let m = Int(digits.suffix(2)), m <= 59 else {
+            text = display(date); return
+        }
         let cal = Calendar.current
-        var c = cal.dateComponents([.year, .month, .day], from: base)
-        c.hour = cal.component(.hour, from: src)
-        c.minute = cal.component(.minute, from: src)
-        c.second = 0
-        return cal.date(from: c) ?? base
-    }
-}
-
-private extension DateFormatter {
-    static func make(_ format: String) -> DateFormatter {
-        let f = DateFormatter(); f.dateFormat = format; return f
+        var c = cal.dateComponents([.year, .month, .day], from: date)
+        c.hour = h; c.minute = m; c.second = 0
+        date = cal.date(from: c) ?? date
+        text = display(date)
     }
 }
 
