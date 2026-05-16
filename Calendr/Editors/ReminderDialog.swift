@@ -145,7 +145,7 @@ struct ReminderDialog: View {
             } else {
                 DateRow(label: "Bắt đầu", date: $startDate, allDay: $allDay, showAllDay: true)
                 Divider()
-                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate, referenceDate: startDate)
+                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate)
             }
 
             Divider()
@@ -216,11 +216,30 @@ private struct DateRow: View {
     @Binding var date: Date
     @Binding var allDay: Bool
     var minDate: Date? = nil
-    var referenceDate: Date? = nil
     var showAllDay: Bool = false
 
     @State private var showCalendar = false
     @State private var showTimePicker = false
+
+    private static let hhmm: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
+    }()
+
+    // Bridges the time component of `date` to/from "HH:mm" string for TimePopover
+    private var timeStringBinding: Binding<String> {
+        Binding(
+            get: { Self.hhmm.string(from: date) },
+            set: { str in
+                guard let parsed = Self.hhmm.date(from: str) else { return }
+                let cal = Calendar.current
+                var c = cal.dateComponents([.year, .month, .day], from: date)
+                c.hour   = cal.component(.hour,   from: parsed)
+                c.minute = cal.component(.minute, from: parsed)
+                c.second = 0
+                date = cal.date(from: c) ?? date
+            }
+        )
+    }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -242,16 +261,16 @@ private struct DateRow: View {
                 }
             }
 
-            // Time chip → suggestion list
+            // Time chip → TimePopover
             if !allDay {
                 Button { showTimePicker.toggle() } label: {
                     DateChip(systemImage: "clock",
-                             text: date.formatted(.dateTime.hour().minute()))
+                             text: Self.hhmm.string(from: date))
                 }
                 .buttonStyle(.plain)
                 .fixedSize()
                 .popover(isPresented: $showTimePicker, arrowEdge: .bottom) {
-                    TimePickerPopover(date: $date, referenceDate: referenceDate) {
+                    TimePopover(selection: timeStringBinding) {
                         showTimePicker = false
                     }
                 }
@@ -285,142 +304,6 @@ private struct DateChip: View {
         .foregroundStyle(.primary)
         .padding(.horizontal, 9).padding(.vertical, 5)
         .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
-    }
-}
-
-// MARK: - TimePickerPopover
-
-private struct TimePickerPopover: View {
-    @Binding var date: Date
-    var referenceDate: Date? = nil
-    var onDone: () -> Void
-
-    @State private var inputText = ""
-    @FocusState private var focused: Bool
-
-    private static let fmt: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
-    }()
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Editable text field
-            TextField("HH:mm", text: $inputText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .semibold).monospacedDigit())
-                .multilineTextAlignment(.center)
-                .focused($focused)
-                .onSubmit { commitText() }
-                .padding(.horizontal, 10).padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.06)))
-                .padding(.horizontal, 8).padding(.top, 8)
-
-            Divider().padding(.top, 8)
-
-            // 30-min suggestion list
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(slots, id: \.self) { slot in
-                            slotRow(slot).id(slot)
-                        }
-                    }
-                }
-                .frame(height: 200)
-                .onAppear {
-                    if let near = nearest { proxy.scrollTo(near, anchor: .center) }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { focused = true }
-                }
-            }
-        }
-        .frame(width: 190)
-        .onAppear { inputText = Self.fmt.string(from: date) }
-    }
-
-    private var slots: [Date] {
-        let cal = Calendar.current
-        let base = cal.startOfDay(for: date)
-        return (0..<48).compactMap { cal.date(byAdding: .minute, value: $0 * 30, to: base) }
-    }
-
-    private var nearest: Date? {
-        slots.min { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) }
-    }
-
-    @ViewBuilder
-    private func slotRow(_ slot: Date) -> some View {
-        let selected = sameTime(slot, date)
-        Button {
-            date = merged(time: slot, into: date)
-            onDone()
-        } label: {
-            HStack {
-                Text(rowLabel(slot))
-                    .font(.system(size: 13))
-                    .foregroundStyle(selected ? Color.accentColor : .primary)
-                Spacer()
-                if selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
-            .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(selected ? Color.accentColor.opacity(0.12) : Color.clear)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func rowLabel(_ slot: Date) -> String {
-        let time = Self.fmt.string(from: slot)
-        guard let ref = referenceDate else { return time }
-        let mins = Int(merged(time: slot, into: date).timeIntervalSince(ref) / 60)
-        guard mins >= 0 else { return time }
-        if mins == 0 { return "\(time) (0 phút)" }
-        if mins < 60 { return "\(time) (\(mins) phút)" }
-        let h = Double(mins) / 60
-        let label = h == floor(h) ? "\(Int(h)) giờ" : String(format: "%g giờ", h)
-        return "\(time) (\(label))"
-    }
-
-    private func sameTime(_ a: Date, _ b: Date) -> Bool {
-        let cal = Calendar.current
-        return cal.component(.hour, from: a) == cal.component(.hour, from: b)
-            && cal.component(.minute, from: a) == cal.component(.minute, from: b)
-    }
-
-    private func merged(time src: Date, into base: Date) -> Date {
-        let cal = Calendar.current
-        var c = cal.dateComponents([.year, .month, .day], from: base)
-        c.hour = cal.component(.hour, from: src)
-        c.minute = cal.component(.minute, from: src)
-        c.second = 0
-        return cal.date(from: c) ?? base
-    }
-
-    private func commitText() {
-        var t = inputText.trimmingCharacters(in: .whitespaces).lowercased()
-
-        // Normalize Vietnamese "h" separator: "15h30" → "15:30", "9h" → "9:00"
-        if let match = t.range(of: #"^(\d{1,2})h(\d{0,2})$"#, options: .regularExpression) {
-            let raw = String(t[match])
-            let parts = raw.dropFirst(0).components(separatedBy: "h")
-            let mins = parts.count > 1 && !parts[1].isEmpty ? parts[1] : "00"
-            t = "\(parts[0]):\(mins)"
-        }
-
-        // Try multiple formats; locale en_US_POSIX for am/pm
-        let formats = ["HH:mm", "H:mm", "HHmm", "Hmm", "h:mm a", "h:mma", "h a", "ha"]
-        for fmt in formats {
-            let f = DateFormatter()
-            f.dateFormat = fmt
-            f.locale = Locale(identifier: "en_US_POSIX")
-            if let parsed = f.date(from: t) {
-                date = merged(time: parsed, into: date)
-                onDone()
-                return
-            }
-        }
     }
 }
 

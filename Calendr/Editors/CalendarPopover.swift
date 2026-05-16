@@ -124,7 +124,7 @@ struct CalendarPopover: View {
                     onClose()
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 10.5, weight: .bold))
                 .foregroundStyle(Color.accentColor)
             }
         }
