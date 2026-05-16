@@ -145,7 +145,7 @@ struct ReminderDialog: View {
             } else {
                 DateRow(label: "Bắt đầu", date: $startDate, allDay: $allDay, showAllDay: true)
                 Divider()
-                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate)
+                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate, referenceDate: startDate)
             }
 
             Divider()
@@ -213,6 +213,7 @@ private struct DateRow: View {
     @Binding var date: Date
     @Binding var allDay: Bool
     var minDate: Date? = nil
+    var referenceDate: Date? = nil
     var showAllDay: Bool = false
 
     @State private var showDatePopover = false
@@ -239,7 +240,7 @@ private struct DateRow: View {
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showTimePopover, arrowEdge: .bottom) {
-                    TimePickerPopover(date: $date) { showTimePopover = false }
+                    TimePickerPopover(date: $date, referenceDate: referenceDate) { showTimePopover = false }
                 }
             }
 
@@ -332,28 +333,137 @@ private struct CalendarPopover: View {
     }
 }
 
+/// Time picker: editable text field (HH:mm) + scrollable 30-min suggestion list.
+/// referenceDate enables relative-duration labels ("30 phút", "1 giờ", etc.).
 private struct TimePickerPopover: View {
     @Binding var date: Date
+    var referenceDate: Date? = nil
     var onDone: () -> Void
+
+    @State private var inputText = ""
+    @FocusState private var focused: Bool
+
+    private static let fmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
+    }()
 
     var body: some View {
         VStack(spacing: 0) {
-            DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
-                .datePickerStyle(.stepperField)
-                .labelsHidden()
-                .padding(16)
+            // Editable time field
+            TextField("HH:mm", text: $inputText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                .focused($focused)
+                .onSubmit { commitText() }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.accentColor, lineWidth: 1.5)
+                )
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
 
             Divider()
-            HStack {
-                Spacer()
-                Button("Xong") { onDone() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .keyboardShortcut(.defaultAction)
+
+            // Suggestion list — 30-min slots, scroll to current selection
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(slots, id: \.self) { slot in
+                            suggestionRow(slot)
+                                .id(slot)
+                        }
+                    }
+                }
+                .frame(height: 220)
+                .onAppear {
+                    if let near = nearest { proxy.scrollTo(near, anchor: .center) }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { focused = true }
+                }
             }
-            .padding(8)
         }
-        .frame(width: 180)
+        .frame(width: 210)
+        .onAppear { inputText = Self.fmt.string(from: date) }
+    }
+
+    // MARK: helpers
+
+    private var slots: [Date] {
+        let cal = Calendar.current
+        let base = cal.startOfDay(for: date)
+        return (0..<48).compactMap { cal.date(byAdding: .minute, value: $0 * 30, to: base) }
+    }
+
+    private var nearest: Date? {
+        slots.min { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) }
+    }
+
+    @ViewBuilder
+    private func suggestionRow(_ slot: Date) -> some View {
+        let selected = sameTime(slot, date)
+        Button {
+            date = merging(time: slot, into: date)
+            onDone()
+        } label: {
+            HStack {
+                Text(rowText(slot))
+                    .font(.system(size: 13))
+                    .foregroundStyle(selected ? Color.accentColor : .primary)
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .background(selected ? Color.accentColor.opacity(0.12) : Color.clear)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func rowText(_ slot: Date) -> String {
+        let time = Self.fmt.string(from: slot)
+        guard let ref = referenceDate else { return time }
+        let mins = Int(merging(time: slot, into: date).timeIntervalSince(ref) / 60)
+        return "\(time) \(relativeDuration(mins))"
+    }
+
+    private func relativeDuration(_ mins: Int) -> String {
+        guard mins >= 0 else { return "" }
+        if mins == 0 { return "(0 phút)" }
+        if mins < 60 { return "(\(mins) phút)" }
+        let h = Double(mins) / 60.0
+        return h == floor(h) ? "(\(Int(h)) giờ)" : "(\(String(format: "%g", h)) giờ)"
+    }
+
+    private func sameTime(_ a: Date, _ b: Date) -> Bool {
+        let cal = Calendar.current
+        return cal.component(.hour, from: a) == cal.component(.hour, from: b)
+            && cal.component(.minute, from: a) == cal.component(.minute, from: b)
+    }
+
+    private func merging(time src: Date, into base: Date) -> Date {
+        let cal = Calendar.current
+        var c = cal.dateComponents([.year, .month, .day], from: base)
+        c.hour = cal.component(.hour, from: src)
+        c.minute = cal.component(.minute, from: src)
+        c.second = 0
+        return cal.date(from: c) ?? base
+    }
+
+    private func commitText() {
+        let trimmed = inputText.trimmingCharacters(in: .whitespaces)
+        for fmt in ["HH:mm", "H:mm", "HH:m", "H:m"] {
+            let f = DateFormatter(); f.dateFormat = fmt
+            if let parsed = f.date(from: trimmed) {
+                date = merging(time: parsed, into: date)
+                onDone()
+                return
+            }
+        }
     }
 }
 
