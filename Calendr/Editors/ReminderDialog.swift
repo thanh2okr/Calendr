@@ -243,117 +243,243 @@ private struct DateRow: View {
     }
 }
 
-/// Date input with auto-mask: digits only, slashes inserted automatically.
-/// Typing "12092026" produces "12/09/2026". Backspace works naturally.
-/// Commits on Enter or blur; reverts on invalid input.
+// MARK: - Masked input (NSViewRepresentable)
+//
+// Uses AppKit delegate to intercept every keystroke:
+//   • rejects non-digit input immediately
+//   • validates digit ranges in real-time (e.g. hour tens digit > 2 → blocked)
+//   • auto-inserts separators and tracks cursor position precisely
+//   • avoids the SwiftUI onChange cursor-jump problem entirely
+
 private struct DateMaskField: View {
     @Binding var date: Date
     var minDate: Date?
-
-    @State private var text = ""
-    @FocusState private var focused: Bool
-
     var body: some View {
-        TextField("dd/mm/yyyy", text: $text)
-            .textFieldStyle(.plain)
-            .font(.system(size: 13).monospacedDigit())
-            .multilineTextAlignment(.center)
-            .focused($focused)
-            .onSubmit { commit() }
-            .onChange(of: focused) { _, on in if !on { commit() } }
-            .onChange(of: text) { _, new in applyMask(new) }
-            .onAppear { text = display(date) }
-            .onChange(of: date) { _, d in if !focused { text = display(d) } }
+        _MaskInput(mode: .date(minDate: minDate), date: $date)
+            .frame(width: 80, height: 17)
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
-            .frame(width: 96)
-    }
-
-    private func display(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "dd/MM/yyyy"; return f.string(from: d)
-    }
-
-    private func applyMask(_ new: String) {
-        let digits = String(new.filter(\.isNumber).prefix(8))
-        var masked = ""
-        for (i, c) in digits.enumerated() {
-            if i == 2 || i == 4 { masked += "/" }
-            masked += String(c)
-        }
-        if text != masked { text = masked }
-    }
-
-    private func commit() {
-        let digits = text.filter(\.isNumber)
-        let f = DateFormatter(); f.dateFormat = "ddMMyyyy"
-        guard digits.count == 8, let parsed = f.date(from: digits) else {
-            text = display(date); return
-        }
-        var merged = mergeDate(parsed, into: date)
-        if let min = minDate, merged < min { merged = min }
-        date = merged
-        text = display(date)
-    }
-
-    private func mergeDate(_ src: Date, into base: Date) -> Date {
-        let cal = Calendar.current
-        var c = cal.dateComponents([.hour, .minute, .second], from: base)
-        let d = cal.dateComponents([.year, .month, .day], from: src)
-        c.year = d.year; c.month = d.month; c.day = d.day
-        return cal.date(from: c) ?? base
     }
 }
 
-/// Time input with auto-mask: digits only, colon inserted automatically.
-/// Typing "2130" produces "21:30". Validates hour 0–23, minute 0–59.
 private struct TimeMaskField: View {
     @Binding var date: Date
-
-    @State private var text = ""
-    @FocusState private var focused: Bool
-
     var body: some View {
-        TextField("hh:mm", text: $text)
-            .textFieldStyle(.plain)
-            .font(.system(size: 13).monospacedDigit())
-            .multilineTextAlignment(.center)
-            .focused($focused)
-            .onSubmit { commit() }
-            .onChange(of: focused) { _, on in if !on { commit() } }
-            .onChange(of: text) { _, new in applyMask(new) }
-            .onAppear { text = display(date) }
-            .onChange(of: date) { _, d in if !focused { text = display(d) } }
+        _MaskInput(mode: .time, date: $date)
+            .frame(width: 38, height: 17)
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
-            .frame(width: 58)
     }
+}
 
-    private func display(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
-    }
+private struct _MaskInput: NSViewRepresentable {
 
-    private func applyMask(_ new: String) {
-        let digits = String(new.filter(\.isNumber).prefix(4))
-        var masked = ""
-        for (i, c) in digits.enumerated() {
-            if i == 2 { masked += ":" }
-            masked += String(c)
+    enum Mode {
+        case date(minDate: Date?)
+        case time
+
+        var maxDigits: Int { switch self { case .date: 8; case .time: 4 } }
+        var placeholder: String { switch self { case .date: "dd/mm/yyyy"; case .time: "hh:mm" } }
+
+        func format(_ d: Date) -> String {
+            let f = DateFormatter()
+            f.dateFormat = (self == .time) ? "HH:mm" : "dd/MM/yyyy"
+            return f.string(from: d)
         }
-        if text != masked { text = masked }
+
+        func mask(_ digits: String) -> String {
+            var r = ""
+            for (i, c) in digits.enumerated() {
+                switch self {
+                case .date: if i == 2 || i == 4 { r += "/" }
+                case .time: if i == 2 { r += ":" }
+                }
+                r += String(c)
+            }
+            return r
+        }
+
+        /// Returns false if this digit at this position violates range rules.
+        func isValid(digit: Int, at pos: Int, digits: String) -> Bool {
+            switch self {
+            case .date:
+                switch pos {
+                case 0: return digit <= 3
+                case 1: return !(digits.first?.wholeNumberValue == 3 && digit > 1)
+                case 2: return digit <= 1
+                case 3: return !(digits[digits.index(digits.startIndex, offsetBy: 2)].wholeNumberValue == 1 && digit > 2)
+                default: return true
+                }
+            case .time:
+                switch pos {
+                case 0: return digit <= 2
+                case 1: return !(digits.first?.wholeNumberValue == 2 && digit > 3)
+                case 2: return digit <= 5
+                default: return true
+                }
+            }
+        }
+
+        static func == (lhs: Mode, rhs: Mode) -> Bool {
+            switch (lhs, rhs) {
+            case (.time, .time): return true
+            case (.date, .date): return true
+            default: return false
+            }
+        }
     }
 
-    private func commit() {
-        let digits = text.filter(\.isNumber)
-        guard digits.count == 4,
-              let h = Int(digits.prefix(2)), h <= 23,
-              let m = Int(digits.suffix(2)), m <= 59 else {
-            text = display(date); return
+    let mode: Mode
+    @Binding var date: Date
+
+    func makeNSView(context: Context) -> NSTextField {
+        let tf = NSTextField()
+        tf.stringValue = mode.format(date)
+        tf.placeholderString = mode.placeholder
+        tf.delegate = context.coordinator
+        tf.isBezeled = false; tf.isBordered = false
+        tf.drawsBackground = false
+        tf.focusRingType = .none
+        tf.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        tf.alignment = .center
+        return tf
+    }
+
+    func updateNSView(_ tf: NSTextField, context: Context) {
+        context.coordinator.mode = mode
+        context.coordinator.binding = $date
+        guard !context.coordinator.isEditing else { return }
+        tf.stringValue = mode.format(date)
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(mode: mode, binding: $date) }
+
+    // MARK: - Coordinator
+
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        var mode: Mode
+        var binding: Binding<Date>
+        var isEditing = false
+
+        init(mode: Mode, binding: Binding<Date>) {
+            self.mode = mode; self.binding = binding
         }
-        let cal = Calendar.current
-        var c = cal.dateComponents([.year, .month, .day], from: date)
-        c.hour = h; c.minute = m; c.second = 0
-        date = cal.date(from: c) ?? date
-        text = display(date)
+
+        func controlTextDidBeginEditing(_ obj: Notification) { isEditing = true }
+
+        func controlTextDidEndEditing(_ obj: Notification) {
+            isEditing = false
+            guard let tf = obj.object as? NSTextField else { return }
+            commit(tf)
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy sel: Selector) -> Bool {
+            if sel == #selector(NSResponder.insertNewline(_:)) {
+                control.window?.makeFirstResponder(nil); return true
+            }
+            return false
+        }
+
+        func control(_ control: NSControl, textView: NSTextView,
+                     shouldChangeTextIn range: NSRange, replacementString rep: String) -> Bool {
+            let current = textView.string
+            let beforeCursor = String((current as NSString).substring(to: range.location))
+            let digitsBefore = beforeCursor.filter(\.isNumber).count
+            var digits = Array(current.filter(\.isNumber))
+
+            if rep.isEmpty {
+                // ── Deletion ──────────────────────────────────────────────
+                let deleted = (current as NSString).substring(with: range)
+                let deletedDigits = deleted.filter(\.isNumber).count
+                if deletedDigits > 0 {
+                    let end = min(digits.count, digitsBefore + deletedDigits)
+                    if digitsBefore < end { digits.removeSubrange(digitsBefore..<end) }
+                    apply(String(digits), cursor: digitsBefore, to: textView)
+                } else if !deleted.isEmpty, digitsBefore > 0 {
+                    // only a separator was deleted → remove preceding digit
+                    digits.remove(at: digitsBefore - 1)
+                    apply(String(digits), cursor: digitsBefore - 1, to: textView)
+                }
+                return false
+            }
+
+            // ── Insertion — digits only ───────────────────────────────────
+            guard rep.allSatisfy(\.isNumber) else { return false }
+
+            // Remove any selected-range digits first
+            let selDigits = (current as NSString).substring(with: range).filter(\.isNumber).count
+            if selDigits > 0 {
+                let end = min(digits.count, digitsBefore + selDigits)
+                digits.removeSubrange(digitsBefore..<end)
+            }
+
+            for (offset, c) in rep.enumerated() {
+                let pos = digitsBefore + offset
+                guard pos <= digits.count, digits.count < mode.maxDigits else { return false }
+                guard let d = c.wholeNumberValue,
+                      mode.isValid(digit: d, at: pos, digits: String(digits)) else { return false }
+                digits.insert(c, at: pos)
+            }
+
+            apply(String(digits), cursor: digitsBefore + rep.count, to: textView)
+            return false
+        }
+
+        // MARK: helpers
+
+        private func apply(_ digits: String, cursor digitIdx: Int, to tv: NSTextView) {
+            let masked = mode.mask(digits)
+            let pos = maskedPos(digitIdx: digitIdx, in: masked)
+            tv.string = masked
+            tv.setSelectedRange(NSRange(location: pos, length: 0))
+        }
+
+        private func maskedPos(digitIdx: Int, in masked: String) -> Int {
+            var count = 0
+            for (i, c) in masked.enumerated() {
+                if count == digitIdx { return i }
+                if c.isNumber { count += 1 }
+            }
+            return masked.count
+        }
+
+        private func commit(_ tf: NSTextField) {
+            let digits = tf.stringValue.filter(\.isNumber)
+            switch mode {
+            case .date(let minDate):
+                let f = DateFormatter(); f.dateFormat = "ddMMyyyy"
+                guard digits.count == 8, let parsed = f.date(from: digits) else {
+                    tf.stringValue = mode.format(binding.wrappedValue); return
+                }
+                var merged = mergeDate(parsed)
+                if let min = minDate, merged < min { merged = min }
+                binding.wrappedValue = merged
+                tf.stringValue = mode.format(merged)
+            case .time:
+                guard digits.count == 4,
+                      let h = Int(digits.prefix(2)), h <= 23,
+                      let m = Int(digits.suffix(2)), m <= 59 else {
+                    tf.stringValue = mode.format(binding.wrappedValue); return
+                }
+                binding.wrappedValue = mergeTime(h, m)
+                tf.stringValue = mode.format(binding.wrappedValue)
+            }
+        }
+
+        private func mergeDate(_ src: Date) -> Date {
+            let cal = Calendar.current
+            var c = cal.dateComponents([.hour, .minute, .second], from: binding.wrappedValue)
+            let d = cal.dateComponents([.year, .month, .day], from: src)
+            c.year = d.year; c.month = d.month; c.day = d.day
+            return cal.date(from: c) ?? binding.wrappedValue
+        }
+
+        private func mergeTime(_ h: Int, _ m: Int) -> Date {
+            let cal = Calendar.current
+            var c = cal.dateComponents([.year, .month, .day], from: binding.wrappedValue)
+            c.hour = h; c.minute = m; c.second = 0
+            return cal.date(from: c) ?? binding.wrappedValue
+        }
     }
 }
 
