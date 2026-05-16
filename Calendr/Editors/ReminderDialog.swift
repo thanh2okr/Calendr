@@ -216,7 +216,6 @@ private struct DateRow: View {
     var referenceDate: Date? = nil
     var showAllDay: Bool = false
 
-    @State private var showDatePopover = false
     @State private var showTimePopover = false
 
     var body: some View {
@@ -226,13 +225,25 @@ private struct DateRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
-            Button { showDatePopover.toggle() } label: {
-                DateChipLabel(systemImage: "calendar", text: date.formatted(Date.FormatStyle().day(.twoDigits).month(.twoDigits).year()))
+            // Overlay transparent .compact DatePicker on our chip so macOS 26
+            // native calendar flies up on click — no custom popover wrapper.
+            ZStack {
+                DateChipLabel(
+                    systemImage: "calendar",
+                    text: date.formatted(Date.FormatStyle().day(.twoDigits).month(.twoDigits).year())
+                )
+                Group {
+                    if let min = minDate {
+                        DatePicker("", selection: $date, in: min..., displayedComponents: .date)
+                    } else {
+                        DatePicker("", selection: $date, displayedComponents: .date)
+                    }
+                }
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .opacity(0.011)
             }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showDatePopover, arrowEdge: .bottom) {
-                CalendarPopover(date: $date, minDate: minDate) { showDatePopover = false }
-            }
+            .fixedSize()
 
             if !allDay {
                 Button { showTimePopover.toggle() } label: {
@@ -273,63 +284,6 @@ private struct DateChipLabel: View {
         .foregroundStyle(.primary)
         .padding(.horizontal, 9).padding(.vertical, 5)
         .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
-    }
-}
-
-/// Wraps NSDatePicker with .clockAndCalendar style (date-only) to render the
-/// exact native macOS 26 calendar grid ("Tháng 5 2026", Vietnamese day names,
-/// "Hôm nay" button). Calls onSelect on every date change so the popover
-/// can be dismissed immediately after the user picks a day.
-private struct NativeCalendarPicker: NSViewRepresentable {
-    @Binding var date: Date
-    var minDate: Date?
-    var onSelect: () -> Void
-
-    func makeNSView(context: Context) -> NSDatePicker {
-        let picker = NSDatePicker()
-        picker.datePickerStyle = .clockAndCalendar
-        picker.datePickerElements = .yearMonthDay
-        picker.presentsCalendarOverlay = false
-        picker.isBezeled = false
-        picker.isBordered = false
-        picker.drawsBackground = false
-        picker.target = context.coordinator
-        picker.action = #selector(Coordinator.dateChanged(_:))
-        return picker
-    }
-
-    func updateNSView(_ picker: NSDatePicker, context: Context) {
-        if let min = minDate { picker.minDate = min }
-        if picker.dateValue != date { picker.dateValue = date }
-        context.coordinator.binding = $date
-        context.coordinator.onSelect = onSelect
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(binding: $date, onSelect: onSelect) }
-
-    class Coordinator: NSObject {
-        var binding: Binding<Date>
-        var onSelect: () -> Void
-        init(binding: Binding<Date>, onSelect: @escaping () -> Void) {
-            self.binding = binding
-            self.onSelect = onSelect
-        }
-        @objc func dateChanged(_ picker: NSDatePicker) {
-            binding.wrappedValue = picker.dateValue
-            onSelect()
-        }
-    }
-}
-
-private struct CalendarPopover: View {
-    @Binding var date: Date
-    var minDate: Date?
-    var onDone: () -> Void
-
-    var body: some View {
-        NativeCalendarPicker(date: $date, minDate: minDate, onSelect: onDone)
-            .fixedSize()
-            .padding(4)
     }
 }
 
