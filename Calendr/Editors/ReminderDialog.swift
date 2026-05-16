@@ -230,6 +230,7 @@ private struct DateRow: View {
                          text: date.formatted(Date.FormatStyle().day(.twoDigits).month(.twoDigits).year()))
             }
             .buttonStyle(.plain)
+            .fixedSize()
             .popover(isPresented: $showCalendar, arrowEdge: .bottom) {
                 Group {
                     if let min = minDate {
