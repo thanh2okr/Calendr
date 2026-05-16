@@ -237,17 +237,9 @@ private struct DateRow: View {
             .buttonStyle(.plain)
             .fixedSize()
             .popover(isPresented: $showCalendar, arrowEdge: .bottom) {
-                Group {
-                    if let min = minDate {
-                        DatePicker("", selection: $date, in: min..., displayedComponents: .date)
-                    } else {
-                        DatePicker("", selection: $date, displayedComponents: .date)
-                    }
+                CalendarPopover(selection: $date, minDate: minDate) {
+                    showCalendar = false
                 }
-                .datePickerStyle(.graphical)
-                .labelsHidden()
-                .frame(width: 345)
-                .padding(4)
             }
 
             // Time chip → suggestion list
