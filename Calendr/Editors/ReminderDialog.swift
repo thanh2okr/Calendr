@@ -275,36 +275,60 @@ private struct DateChipLabel: View {
     }
 }
 
+/// Wraps NSDatePicker with .clockAndCalendar style (date-only) to render the
+/// exact native macOS 26 calendar grid ("Tháng 5 2026", Vietnamese day names,
+/// "Hôm nay" button). Calls onSelect on every date change so the popover
+/// can be dismissed immediately after the user picks a day.
+private struct NativeCalendarPicker: NSViewRepresentable {
+    @Binding var date: Date
+    var minDate: Date?
+    var onSelect: () -> Void
+
+    func makeNSView(context: Context) -> NSDatePicker {
+        let picker = NSDatePicker()
+        picker.datePickerStyle = .clockAndCalendar
+        picker.datePickerElements = .yearMonthDay
+        picker.presentsCalendarOverlay = false
+        picker.isBezeled = false
+        picker.isBordered = false
+        picker.drawsBackground = false
+        picker.target = context.coordinator
+        picker.action = #selector(Coordinator.dateChanged(_:))
+        return picker
+    }
+
+    func updateNSView(_ picker: NSDatePicker, context: Context) {
+        if let min = minDate { picker.minDate = min }
+        if picker.dateValue != date { picker.dateValue = date }
+        context.coordinator.binding = $date
+        context.coordinator.onSelect = onSelect
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(binding: $date, onSelect: onSelect) }
+
+    class Coordinator: NSObject {
+        var binding: Binding<Date>
+        var onSelect: () -> Void
+        init(binding: Binding<Date>, onSelect: @escaping () -> Void) {
+            self.binding = binding
+            self.onSelect = onSelect
+        }
+        @objc func dateChanged(_ picker: NSDatePicker) {
+            binding.wrappedValue = picker.dateValue
+            onSelect()
+        }
+    }
+}
+
 private struct CalendarPopover: View {
     @Binding var date: Date
     var minDate: Date?
     var onDone: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            Group {
-                if let min = minDate {
-                    DatePicker("", selection: $date, in: min..., displayedComponents: .date)
-                } else {
-                    DatePicker("", selection: $date, displayedComponents: .date)
-                }
-            }
-            .datePickerStyle(.graphical)
-            .labelsHidden()
-            .padding(.horizontal, 4)
-            .padding(.top, 4)
-
-            Divider()
-            HStack {
-                Spacer()
-                Button("Xong") { onDone() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .keyboardShortcut(.defaultAction)
-            }
-            .padding(8)
-        }
-        .frame(width: 260)
+        NativeCalendarPicker(date: $date, minDate: minDate, onSelect: onDone)
+            .fixedSize()
+            .padding(4)
     }
 }
 
