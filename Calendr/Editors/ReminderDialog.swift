@@ -145,7 +145,7 @@ struct ReminderDialog: View {
             } else {
                 DateRow(label: "Bắt đầu", date: $startDate, allDay: $allDay, showAllDay: true)
                 Divider()
-                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate)
+                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate, referenceDate: startDate)
             }
 
             Divider()
@@ -211,7 +211,11 @@ private struct DateRow: View {
     @Binding var date: Date
     @Binding var allDay: Bool
     var minDate: Date? = nil
+    var referenceDate: Date? = nil
     var showAllDay: Bool = false
+
+    @State private var showCalendar = false
+    @State private var showTimePicker = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -220,10 +224,38 @@ private struct DateRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
-            DateMaskField(date: $date, minDate: minDate)
+            // Date chip → graphical calendar popover
+            Button { showCalendar.toggle() } label: {
+                DateChip(systemImage: "calendar",
+                         text: date.formatted(Date.FormatStyle().day(.twoDigits).month(.twoDigits).year()))
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showCalendar, arrowEdge: .bottom) {
+                Group {
+                    if let min = minDate {
+                        DatePicker("", selection: $date, in: min..., displayedComponents: .date)
+                    } else {
+                        DatePicker("", selection: $date, displayedComponents: .date)
+                    }
+                }
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .frame(width: 300)
+                .padding(8)
+            }
 
+            // Time chip → suggestion list
             if !allDay {
-                TimeMaskField(date: $date)
+                Button { showTimePicker.toggle() } label: {
+                    DateChip(systemImage: "clock",
+                             text: date.formatted(.dateTime.hour().minute()))
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showTimePicker, arrowEdge: .bottom) {
+                    TimePickerPopover(date: $date, referenceDate: referenceDate) {
+                        showTimePicker = false
+                    }
+                }
             }
 
             Spacer()
@@ -243,309 +275,142 @@ private struct DateRow: View {
     }
 }
 
-// MARK: - Masked input (NSViewRepresentable)
-//
-// Uses AppKit delegate to intercept every keystroke:
-//   • rejects non-digit input immediately
-//   • validates digit ranges in real-time (e.g. hour tens digit > 2 → blocked)
-//   • auto-inserts separators and tracks cursor position precisely
-//   • avoids the SwiftUI onChange cursor-jump problem entirely
-
-private struct DateMaskField: View {
-    @Binding var date: Date
-    var minDate: Date?
+private struct DateChip: View {
+    let systemImage: String
+    let text: String
     var body: some View {
-        _MaskInput(mode: .date(minDate: minDate), date: $date)
-            .frame(width: 96, height: 17)
-            .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
+        HStack(spacing: 5) {
+            Image(systemName: systemImage).font(.system(size: 11))
+            Text(text).font(.system(size: 12.5, weight: .medium))
+        }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 9).padding(.vertical, 5)
+        .background(RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.08)))
     }
 }
 
-private struct TimeMaskField: View {
+// MARK: - TimePickerPopover
+
+private struct TimePickerPopover: View {
     @Binding var date: Date
+    var referenceDate: Date? = nil
+    var onDone: () -> Void
+
+    @State private var inputText = ""
+    @FocusState private var focused: Bool
+
+    private static let fmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
+    }()
+
     var body: some View {
-        _MaskInput(mode: .time, date: $date)
-            .frame(width: 46, height: 17)
-            .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
-    }
-}
+        VStack(spacing: 0) {
+            // Editable text field
+            TextField("HH:mm", text: $inputText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                .multilineTextAlignment(.center)
+                .focused($focused)
+                .onSubmit { commitText() }
+                .padding(.horizontal, 10).padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.accentColor, lineWidth: 1.5)
+                )
+                .padding(.horizontal, 8).padding(.top, 8)
 
-/// Segment-overwrite masked input.
-///
-/// Text is always the full formatted string ("DD/MM/YYYY" or "HH:mm").
-/// Each keystroke overwrites the digit at the cursor's slot; cursor advances
-/// to the next slot. After the last digit of a segment:
-///   • valid   → cursor jumps to start of next segment
-///   • invalid → text turns red, cursor returns to start of same segment
-/// After all segments are filled and valid, the Date binding is updated.
-private struct _MaskInput: NSViewRepresentable {
+            Divider().padding(.top, 8)
 
-    enum Mode: Equatable {
-        case date(minDate: Date?)
-        case time
-
-        static func == (lhs: Mode, rhs: Mode) -> Bool {
-            switch (lhs, rhs) {
-            case (.time, .time): true
-            case (.date, .date): true
-            default: false
-            }
-        }
-
-        /// String positions where each digit lives ("DD/MM/YYYY" → [0,1,3,4,6,7,8,9]).
-        var slots: [Int] {
-            switch self {
-            case .date: [0, 1, 3, 4, 6, 7, 8, 9]
-            case .time: [0, 1, 3, 4]
-            }
-        }
-
-        /// Logical segment index for a given slot index.
-        func segment(ofSlot i: Int) -> Int {
-            switch self {
-            case .date: i <= 1 ? 0 : i <= 3 ? 1 : 2
-            case .time: i <= 1 ? 0 : 1
-            }
-        }
-
-        /// First slot index of a segment.
-        func firstSlot(inSeg seg: Int) -> Int {
-            switch self {
-            case .date: [0, 2, 4][seg]
-            case .time: seg == 0 ? 0 : 2
-            }
-        }
-
-        /// Last slot index of a segment.
-        func lastSlot(inSeg seg: Int) -> Int {
-            switch self {
-            case .date: [1, 3, 7][seg]
-            case .time: seg == 0 ? 1 : 3
-            }
-        }
-
-        func format(_ d: Date) -> String {
-            let f = DateFormatter()
-            f.dateFormat = (self == .time) ? "HH:mm" : "dd/MM/yyyy"
-            return f.string(from: d)
-        }
-
-        /// Per-digit range check (before placing the digit).
-        func isDigitValid(_ d: Int, atSlot slotIdx: Int, str: String) -> Bool {
-            let s = slots
-            let chars = Array(str)
-            func ch(_ i: Int) -> Int { chars[s[i]].wholeNumberValue ?? 0 }
-            switch self {
-            case .date:
-                switch slotIdx {
-                case 0: return d <= 3
-                case 1: return !(ch(0) == 3 && d > 1)
-                case 2: return d <= 1
-                case 3: return !(ch(2) == 1 && d > 2)
-                default: return true
-                }
-            case .time:
-                switch slotIdx {
-                case 0: return d <= 2
-                case 1: return !(ch(0) == 2 && d > 3)
-                case 2: return d <= 5
-                default: return true
-                }
-            }
-        }
-
-        /// Segment-level validation after both digits are placed.
-        func isSegmentValid(_ seg: Int, str: String) -> Bool {
-            let s = slots; let chars = Array(str)
-            func val(_ a: Int, _ b: Int) -> Int {
-                (chars[s[a]].wholeNumberValue ?? 0) * 10 + (chars[s[b]].wholeNumberValue ?? 0)
-            }
-            switch self {
-            case .date:
-                switch seg {
-                case 0: let v = val(0,1); return v >= 1 && v <= 31
-                case 1: let v = val(2,3); return v >= 1 && v <= 12
-                default: return true   // year: any 4 digits; full check at commit
-                }
-            case .time:
-                switch seg {
-                case 0: return val(0,1) <= 23
-                case 1: return val(2,3) <= 59
-                default: return true
-                }
-            }
-        }
-
-        /// Parse + merge into existingDate. Returns nil if invalid calendar date.
-        func commit(str: String, into existingDate: Date) -> Date? {
-            switch self {
-            case .date(let minDate):
-                let f = DateFormatter()
-                f.dateFormat = "dd/MM/yyyy"
-                f.isLenient = false
-                f.locale = Locale(identifier: "en_US_POSIX")
-                guard let parsed = f.date(from: str) else { return nil }
-                let cal = Calendar.current
-                var c = cal.dateComponents([.hour, .minute, .second], from: existingDate)
-                let d = cal.dateComponents([.year, .month, .day], from: parsed)
-                c.year = d.year; c.month = d.month; c.day = d.day
-                var merged = cal.date(from: c) ?? parsed
-                if let min = minDate, merged < min { merged = min }
-                return merged
-            case .time:
-                let f = DateFormatter()
-                f.dateFormat = "HH:mm"
-                guard let parsed = f.date(from: str) else { return nil }
-                let cal = Calendar.current
-                var c = cal.dateComponents([.year, .month, .day], from: existingDate)
-                c.hour = cal.component(.hour, from: parsed)
-                c.minute = cal.component(.minute, from: parsed)
-                c.second = 0
-                return cal.date(from: c)
-            }
-        }
-    }
-
-    let mode: Mode
-    @Binding var date: Date
-
-    func makeNSView(context: Context) -> NSTextField {
-        let tf = NSTextField()
-        tf.stringValue = mode.format(date)
-        tf.delegate = context.coordinator
-        tf.isBezeled = false; tf.isBordered = false
-        tf.drawsBackground = false
-        tf.focusRingType = .none
-        tf.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
-        tf.alignment = .center
-        context.coordinator.textField = tf
-        return tf
-    }
-
-    func updateNSView(_ tf: NSTextField, context: Context) {
-        context.coordinator.mode = mode
-        context.coordinator.binding = $date
-        guard !context.coordinator.isEditing else { return }
-        tf.stringValue = mode.format(date)
-        tf.textColor = .labelColor
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(mode: mode, binding: $date) }
-
-    // MARK: - Coordinator
-
-    class Coordinator: NSObject, NSTextFieldDelegate {
-        var mode: Mode
-        var binding: Binding<Date>
-        var isEditing = false
-        var hasError = false
-        weak var textField: NSTextField?
-
-        init(mode: Mode, binding: Binding<Date>) {
-            self.mode = mode; self.binding = binding
-        }
-
-        func controlTextDidBeginEditing(_ obj: Notification) { isEditing = true }
-
-        func controlTextDidEndEditing(_ obj: Notification) {
-            isEditing = false
-            guard let tf = obj.object as? NSTextField else { return }
-            if !hasError, let d = mode.commit(str: tf.stringValue, into: binding.wrappedValue) {
-                binding.wrappedValue = d
-            }
-            tf.stringValue = mode.format(binding.wrappedValue)
-            tf.textColor = .labelColor
-            hasError = false
-        }
-
-        func control(_ control: NSControl, textView: NSTextView, doCommandBy sel: Selector) -> Bool {
-            if sel == #selector(NSResponder.insertNewline(_:)) {
-                control.window?.makeFirstResponder(nil); return true
-            }
-            return false
-        }
-
-        func control(_ control: NSControl, textView: NSTextView,
-                     shouldChangeTextIn range: NSRange, replacementString rep: String) -> Bool {
-
-            let current = textView.string
-            let slots = mode.slots
-
-            // Backspace: move cursor to previous slot (no text change — overwrite model)
-            if rep.isEmpty {
-                let loc = range.location
-                if let prevIdx = slots.lastIndex(where: { $0 < loc }) {
-                    textView.setSelectedRange(NSRange(location: slots[prevIdx], length: 0))
-                }
-                return false
-            }
-
-            // Single digit only
-            guard rep.count == 1, let char = rep.first, char.isNumber,
-                  let digit = char.wholeNumberValue else { return false }
-
-            let loc = range.location
-            guard let slotIdx = slots.firstIndex(where: { $0 >= loc }) else { return false }
-
-            // Per-digit validity (reject immediately, flash red)
-            guard mode.isDigitValid(digit, atSlot: slotIdx, str: current) else {
-                textView.textColor = .systemRed
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-                    if self?.hasError == false { textView.textColor = .labelColor }
-                }
-                return false
-            }
-
-            // Entering a new segment after error — reset error state
-            if hasError { hasError = false; textView.textColor = .labelColor }
-
-            // Overwrite digit in place
-            var chars = Array(current)
-            chars[slots[slotIdx]] = char
-            let newStr = String(chars)
-            textView.string = newStr
-
-            let seg = mode.segment(ofSlot: slotIdx)
-            let isLastInSeg = slotIdx == mode.lastSlot(inSeg: seg)
-
-            if isLastInSeg {
-                if mode.isSegmentValid(seg, str: newStr) {
-                    textView.textColor = .labelColor
-                    let nextSlotIdx = slotIdx + 1
-                    if nextSlotIdx < slots.count {
-                        // Advance to next segment
-                        textView.setSelectedRange(NSRange(location: slots[nextSlotIdx], length: 0))
-                    } else {
-                        // All segments done — commit
-                        textView.setSelectedRange(NSRange(location: newStr.count, length: 0))
-                        DispatchQueue.main.async { [weak self] in
-                            guard let self, let tf = self.textField else { return }
-                            if let d = self.mode.commit(str: newStr, into: self.binding.wrappedValue) {
-                                self.binding.wrappedValue = d
-                                tf.textColor = .labelColor
-                            } else {
-                                tf.textColor = .systemRed
-                                self.hasError = true
-                                let firstPos = slots[self.mode.firstSlot(inSeg: seg)]
-                                (tf.currentEditor() as? NSTextView)?.setSelectedRange(NSRange(location: firstPos, length: 0))
-                            }
+            // 30-min suggestion list
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(slots, id: \.self) { slot in
+                            slotRow(slot).id(slot)
                         }
                     }
-                } else {
-                    // Invalid segment — red, cursor back to start of segment
-                    hasError = true
-                    textView.textColor = .systemRed
-                    textView.setSelectedRange(
-                        NSRange(location: slots[mode.firstSlot(inSeg: seg)], length: 0))
                 }
-            } else {
-                // Mid-segment — advance one slot
-                textView.setSelectedRange(NSRange(location: slots[slotIdx + 1], length: 0))
+                .frame(height: 200)
+                .onAppear {
+                    if let near = nearest { proxy.scrollTo(near, anchor: .center) }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { focused = true }
+                }
             }
+        }
+        .frame(width: 190)
+        .onAppear { inputText = Self.fmt.string(from: date) }
+    }
 
-            return false
+    private var slots: [Date] {
+        let cal = Calendar.current
+        let base = cal.startOfDay(for: date)
+        return (0..<48).compactMap { cal.date(byAdding: .minute, value: $0 * 30, to: base) }
+    }
+
+    private var nearest: Date? {
+        slots.min { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) }
+    }
+
+    @ViewBuilder
+    private func slotRow(_ slot: Date) -> some View {
+        let selected = sameTime(slot, date)
+        Button {
+            date = merged(time: slot, into: date)
+            onDone()
+        } label: {
+            HStack {
+                Text(rowLabel(slot))
+                    .font(.system(size: 13))
+                    .foregroundStyle(selected ? Color.accentColor : .primary)
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(selected ? Color.accentColor.opacity(0.12) : Color.clear)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func rowLabel(_ slot: Date) -> String {
+        let time = Self.fmt.string(from: slot)
+        guard let ref = referenceDate else { return time }
+        let mins = Int(merged(time: slot, into: date).timeIntervalSince(ref) / 60)
+        guard mins >= 0 else { return time }
+        if mins == 0 { return "\(time) (0 phút)" }
+        if mins < 60 { return "\(time) (\(mins) phút)" }
+        let h = Double(mins) / 60
+        let label = h == floor(h) ? "\(Int(h)) giờ" : String(format: "%g giờ", h)
+        return "\(time) (\(label))"
+    }
+
+    private func sameTime(_ a: Date, _ b: Date) -> Bool {
+        let cal = Calendar.current
+        return cal.component(.hour, from: a) == cal.component(.hour, from: b)
+            && cal.component(.minute, from: a) == cal.component(.minute, from: b)
+    }
+
+    private func merged(time src: Date, into base: Date) -> Date {
+        let cal = Calendar.current
+        var c = cal.dateComponents([.year, .month, .day], from: base)
+        c.hour = cal.component(.hour, from: src)
+        c.minute = cal.component(.minute, from: src)
+        c.second = 0
+        return cal.date(from: c) ?? base
+    }
+
+    private func commitText() {
+        let t = inputText.trimmingCharacters(in: .whitespaces)
+        for fmt in ["HH:mm", "H:mm", "HHmm", "Hmm"] {
+            let f = DateFormatter(); f.dateFormat = fmt
+            if let parsed = f.date(from: t) {
+                date = merged(time: parsed, into: date)
+                onDone()
+                return
+            }
         }
     }
 }
