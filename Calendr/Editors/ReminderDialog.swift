@@ -252,6 +252,7 @@ private struct DateRow: View {
                              text: date.formatted(.dateTime.hour().minute()))
                 }
                 .buttonStyle(.plain)
+                .fixedSize()
                 .popover(isPresented: $showTimePicker, arrowEdge: .bottom) {
                     TimePickerPopover(date: $date, referenceDate: referenceDate) {
                         showTimePicker = false
