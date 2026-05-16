@@ -256,7 +256,7 @@ private struct DateMaskField: View {
     var minDate: Date?
     var body: some View {
         _MaskInput(mode: .date(minDate: minDate), date: $date)
-            .frame(width: 80, height: 17)
+            .frame(width: 96, height: 17)
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
     }
@@ -266,7 +266,7 @@ private struct TimeMaskField: View {
     @Binding var date: Date
     var body: some View {
         _MaskInput(mode: .time, date: $date)
-            .frame(width: 38, height: 17)
+            .frame(width: 46, height: 17)
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
     }
@@ -422,6 +422,15 @@ private struct _MaskInput: NSViewRepresentable {
             }
 
             apply(String(digits), cursor: digitsBefore + rep.count, to: textView)
+
+            // Auto-commit when all digits are filled — no Enter needed
+            if digits.count == mode.maxDigits {
+                DispatchQueue.main.async { [weak self, weak textView] in
+                    guard let self, let tv = textView,
+                          let tf = tv.superview?.superview as? NSTextField else { return }
+                    self.commit(tf)
+                }
+            }
             return false
         }
 
@@ -447,9 +456,14 @@ private struct _MaskInput: NSViewRepresentable {
             let digits = tf.stringValue.filter(\.isNumber)
             switch mode {
             case .date(let minDate):
-                let f = DateFormatter(); f.dateFormat = "ddMMyyyy"
+                let f = DateFormatter()
+                f.dateFormat = "ddMMyyyy"
+                f.isLenient = false          // reject 31/02, 31/04, etc.
+                f.locale = Locale(identifier: "en_US_POSIX")
                 guard digits.count == 8, let parsed = f.date(from: digits) else {
-                    tf.stringValue = mode.format(binding.wrappedValue); return
+                    tf.stringValue = mode.format(binding.wrappedValue)
+                    shake(tf)
+                    return
                 }
                 var merged = mergeDate(parsed)
                 if let min = minDate, merged < min { merged = min }
@@ -459,11 +473,25 @@ private struct _MaskInput: NSViewRepresentable {
                 guard digits.count == 4,
                       let h = Int(digits.prefix(2)), h <= 23,
                       let m = Int(digits.suffix(2)), m <= 59 else {
-                    tf.stringValue = mode.format(binding.wrappedValue); return
+                    tf.stringValue = mode.format(binding.wrappedValue)
+                    shake(tf)
+                    return
                 }
                 binding.wrappedValue = mergeTime(h, m)
                 tf.stringValue = mode.format(binding.wrappedValue)
             }
+        }
+
+        /// Brief horizontal shake to signal invalid input.
+        private func shake(_ view: NSView) {
+            let anim = CAKeyframeAnimation(keyPath: "position.x")
+            anim.values = [0, -6, 6, -4, 4, -2, 2, 0].map {
+                (view.layer?.position.x ?? 0) + $0
+            }
+            anim.duration = 0.35
+            anim.isAdditive = false
+            view.wantsLayer = true
+            view.layer?.add(anim, forKey: "shake")
         }
 
         private func mergeDate(_ src: Date) -> Date {
