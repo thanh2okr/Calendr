@@ -240,8 +240,8 @@ private struct DateRow: View {
                 }
                 .datePickerStyle(.graphical)
                 .labelsHidden()
-                .frame(width: 300)
-                .padding(8)
+                .frame(width: 345)
+                .padding(4)
             }
 
             // Time chip → suggestion list
@@ -313,10 +313,7 @@ private struct TimePickerPopover: View {
                 .focused($focused)
                 .onSubmit { commitText() }
                 .padding(.horizontal, 10).padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.accentColor, lineWidth: 1.5)
-                )
+                .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.06)))
                 .padding(.horizontal, 8).padding(.top, 8)
 
             Divider().padding(.top, 8)
