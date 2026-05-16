@@ -164,12 +164,12 @@ struct ReminderDialog: View {
 
                 // Date rows — start always shown; end only for events; all-day always shown
                 DialogRow(label: kind == .reminder ? "Lịch hẹn" : "Bắt đầu") {
-                    NativeDatePicker(selection: $startDate, showTime: !allDay)
+                    DatePickerRow(date: $startDate, showTime: !allDay)
                 }
                 if kind == .event {
                     Divider()
                     DialogRow(label: "Kết thúc") {
-                        NativeDatePicker(selection: $endDate, showTime: !allDay, minDate: startDate)
+                        DatePickerRow(date: $endDate, showTime: !allDay, minDate: startDate)
                     }
                 }
                 Divider()
@@ -453,10 +453,51 @@ private struct ReminderFlowLayout: Layout {
     }
 }
 
+// MARK: - DatePickerRow
+
+/// Text-field stepper + calendar icon button that opens a floating SwiftUI popover.
+/// NSDatePicker inline overlay is disabled — the popover is the only calendar entry point,
+/// ensuring it always floats above the dialog rather than expanding inside it.
+private struct DatePickerRow: View {
+    @Binding var date: Date
+    var showTime: Bool = true
+    var minDate: Date? = nil
+
+    @State private var showPopover = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            NativeDatePicker(selection: $date, showTime: showTime, minDate: minDate)
+            Button {
+                showPopover.toggle()
+            } label: {
+                Image(systemName: "calendar")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showPopover, arrowEdge: .bottom) {
+                VStack(spacing: 0) {
+                    DatePicker(
+                        "",
+                        selection: $date,
+                        in: minDate.map { $0... } ?? (Date.distantPast...),
+                        displayedComponents: showTime ? [.date, .hourAndMinute] : .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .labelsHidden()
+                    .padding(12)
+                }
+                .onChange(of: date) { _, _ in showPopover = false }
+            }
+        }
+    }
+}
+
 // MARK: - NativeDatePicker
 
 /// NSDatePicker wrapped in NSViewRepresentable using .textFieldAndStepper style.
-/// This avoids the macOS 26 calendar popup that SwiftUI DatePicker(.field) opens on click.
+/// Calendar overlay disabled — DatePickerRow handles it via SwiftUI popover instead.
 private struct NativeDatePicker: NSViewRepresentable {
     @Binding var selection: Date
     var showTime: Bool = true
@@ -465,7 +506,7 @@ private struct NativeDatePicker: NSViewRepresentable {
     func makeNSView(context: Context) -> NSDatePicker {
         let picker = NSDatePicker()
         picker.datePickerStyle = .textFieldAndStepper
-        picker.presentsCalendarOverlay = true
+        picker.presentsCalendarOverlay = false
         picker.isBezeled = false
         picker.isBordered = false
         picker.drawsBackground = false
