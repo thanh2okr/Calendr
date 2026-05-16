@@ -257,7 +257,7 @@ private struct DateMaskField: View {
     var body: some View {
         _MaskInput(mode: .date(minDate: minDate), date: $date)
             .frame(width: 96, height: 17)
-            .padding(.horizontal, 8).padding(.vertical, 4)
+            .padding(.horizontal, 9).padding(.vertical, 5)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
     }
 }
@@ -267,19 +267,64 @@ private struct TimeMaskField: View {
     var body: some View {
         _MaskInput(mode: .time, date: $date)
             .frame(width: 46, height: 17)
-            .padding(.horizontal, 8).padding(.vertical, 4)
+            .padding(.horizontal, 9).padding(.vertical, 5)
             .background(RoundedRectangle(cornerRadius: 6).fill(.primary.opacity(0.07)))
     }
 }
 
+/// Segment-overwrite masked input.
+///
+/// Text is always the full formatted string ("DD/MM/YYYY" or "HH:mm").
+/// Each keystroke overwrites the digit at the cursor's slot; cursor advances
+/// to the next slot. After the last digit of a segment:
+///   • valid   → cursor jumps to start of next segment
+///   • invalid → text turns red, cursor returns to start of same segment
+/// After all segments are filled and valid, the Date binding is updated.
 private struct _MaskInput: NSViewRepresentable {
 
-    enum Mode {
+    enum Mode: Equatable {
         case date(minDate: Date?)
         case time
 
-        var maxDigits: Int { switch self { case .date: 8; case .time: 4 } }
-        var placeholder: String { switch self { case .date: "dd/mm/yyyy"; case .time: "hh:mm" } }
+        static func == (lhs: Mode, rhs: Mode) -> Bool {
+            switch (lhs, rhs) {
+            case (.time, .time): true
+            case (.date, .date): true
+            default: false
+            }
+        }
+
+        /// String positions where each digit lives ("DD/MM/YYYY" → [0,1,3,4,6,7,8,9]).
+        var slots: [Int] {
+            switch self {
+            case .date: [0, 1, 3, 4, 6, 7, 8, 9]
+            case .time: [0, 1, 3, 4]
+            }
+        }
+
+        /// Logical segment index for a given slot index.
+        func segment(ofSlot i: Int) -> Int {
+            switch self {
+            case .date: i <= 1 ? 0 : i <= 3 ? 1 : 2
+            case .time: i <= 1 ? 0 : 1
+            }
+        }
+
+        /// First slot index of a segment.
+        func firstSlot(inSeg seg: Int) -> Int {
+            switch self {
+            case .date: [0, 2, 4][seg]
+            case .time: seg == 0 ? 0 : 2
+            }
+        }
+
+        /// Last slot index of a segment.
+        func lastSlot(inSeg seg: Int) -> Int {
+            switch self {
+            case .date: [1, 3, 7][seg]
+            case .time: seg == 0 ? 1 : 3
+            }
+        }
 
         func format(_ d: Date) -> String {
             let f = DateFormatter()
@@ -287,44 +332,78 @@ private struct _MaskInput: NSViewRepresentable {
             return f.string(from: d)
         }
 
-        func mask(_ digits: String) -> String {
-            var r = ""
-            for (i, c) in digits.enumerated() {
-                switch self {
-                case .date: if i == 2 || i == 4 { r += "/" }
-                case .time: if i == 2 { r += ":" }
-                }
-                r += String(c)
-            }
-            return r
-        }
-
-        /// Returns false if this digit at this position violates range rules.
-        func isValid(digit: Int, at pos: Int, digits: String) -> Bool {
+        /// Per-digit range check (before placing the digit).
+        func isDigitValid(_ d: Int, atSlot slotIdx: Int, str: String) -> Bool {
+            let s = slots
+            let chars = Array(str)
+            func ch(_ i: Int) -> Int { chars[s[i]].wholeNumberValue ?? 0 }
             switch self {
             case .date:
-                switch pos {
-                case 0: return digit <= 3
-                case 1: return !(digits.first?.wholeNumberValue == 3 && digit > 1)
-                case 2: return digit <= 1
-                case 3: return !(digits[digits.index(digits.startIndex, offsetBy: 2)].wholeNumberValue == 1 && digit > 2)
+                switch slotIdx {
+                case 0: return d <= 3
+                case 1: return !(ch(0) == 3 && d > 1)
+                case 2: return d <= 1
+                case 3: return !(ch(2) == 1 && d > 2)
                 default: return true
                 }
             case .time:
-                switch pos {
-                case 0: return digit <= 2
-                case 1: return !(digits.first?.wholeNumberValue == 2 && digit > 3)
-                case 2: return digit <= 5
+                switch slotIdx {
+                case 0: return d <= 2
+                case 1: return !(ch(0) == 2 && d > 3)
+                case 2: return d <= 5
                 default: return true
                 }
             }
         }
 
-        static func == (lhs: Mode, rhs: Mode) -> Bool {
-            switch (lhs, rhs) {
-            case (.time, .time): return true
-            case (.date, .date): return true
-            default: return false
+        /// Segment-level validation after both digits are placed.
+        func isSegmentValid(_ seg: Int, str: String) -> Bool {
+            let s = slots; let chars = Array(str)
+            func val(_ a: Int, _ b: Int) -> Int {
+                (chars[s[a]].wholeNumberValue ?? 0) * 10 + (chars[s[b]].wholeNumberValue ?? 0)
+            }
+            switch self {
+            case .date:
+                switch seg {
+                case 0: let v = val(0,1); return v >= 1 && v <= 31
+                case 1: let v = val(2,3); return v >= 1 && v <= 12
+                default: return true   // year: any 4 digits; full check at commit
+                }
+            case .time:
+                switch seg {
+                case 0: return val(0,1) <= 23
+                case 1: return val(2,3) <= 59
+                default: return true
+                }
+            }
+        }
+
+        /// Parse + merge into existingDate. Returns nil if invalid calendar date.
+        func commit(str: String, into existingDate: Date) -> Date? {
+            switch self {
+            case .date(let minDate):
+                let f = DateFormatter()
+                f.dateFormat = "dd/MM/yyyy"
+                f.isLenient = false
+                f.locale = Locale(identifier: "en_US_POSIX")
+                guard let parsed = f.date(from: str) else { return nil }
+                let cal = Calendar.current
+                var c = cal.dateComponents([.hour, .minute, .second], from: existingDate)
+                let d = cal.dateComponents([.year, .month, .day], from: parsed)
+                c.year = d.year; c.month = d.month; c.day = d.day
+                var merged = cal.date(from: c) ?? parsed
+                if let min = minDate, merged < min { merged = min }
+                return merged
+            case .time:
+                let f = DateFormatter()
+                f.dateFormat = "HH:mm"
+                guard let parsed = f.date(from: str) else { return nil }
+                let cal = Calendar.current
+                var c = cal.dateComponents([.year, .month, .day], from: existingDate)
+                c.hour = cal.component(.hour, from: parsed)
+                c.minute = cal.component(.minute, from: parsed)
+                c.second = 0
+                return cal.date(from: c)
             }
         }
     }
@@ -335,7 +414,6 @@ private struct _MaskInput: NSViewRepresentable {
     func makeNSView(context: Context) -> NSTextField {
         let tf = NSTextField()
         tf.stringValue = mode.format(date)
-        tf.placeholderString = mode.placeholder
         tf.delegate = context.coordinator
         tf.isBezeled = false; tf.isBordered = false
         tf.drawsBackground = false
@@ -351,6 +429,7 @@ private struct _MaskInput: NSViewRepresentable {
         context.coordinator.binding = $date
         guard !context.coordinator.isEditing else { return }
         tf.stringValue = mode.format(date)
+        tf.textColor = .labelColor
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(mode: mode, binding: $date) }
@@ -361,7 +440,8 @@ private struct _MaskInput: NSViewRepresentable {
         var mode: Mode
         var binding: Binding<Date>
         var isEditing = false
-        weak var textField: NSTextField?   // stored in makeNSView for safe auto-commit
+        var hasError = false
+        weak var textField: NSTextField?
 
         init(mode: Mode, binding: Binding<Date>) {
             self.mode = mode; self.binding = binding
@@ -372,7 +452,12 @@ private struct _MaskInput: NSViewRepresentable {
         func controlTextDidEndEditing(_ obj: Notification) {
             isEditing = false
             guard let tf = obj.object as? NSTextField else { return }
-            commit(tf)
+            if !hasError, let d = mode.commit(str: tf.stringValue, into: binding.wrappedValue) {
+                binding.wrappedValue = d
+            }
+            tf.stringValue = mode.format(binding.wrappedValue)
+            tf.textColor = .labelColor
+            hasError = false
         }
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy sel: Selector) -> Bool {
@@ -384,137 +469,83 @@ private struct _MaskInput: NSViewRepresentable {
 
         func control(_ control: NSControl, textView: NSTextView,
                      shouldChangeTextIn range: NSRange, replacementString rep: String) -> Bool {
-            let current = textView.string
-            let beforeCursor = String((current as NSString).substring(to: range.location))
-            let digitsBefore = beforeCursor.filter(\.isNumber).count
-            var digits = Array(current.filter(\.isNumber))
 
+            let current = textView.string
+            let slots = mode.slots
+
+            // Backspace: move cursor to previous slot (no text change — overwrite model)
             if rep.isEmpty {
-                // ── Deletion ──────────────────────────────────────────────
-                let deleted = (current as NSString).substring(with: range)
-                let deletedDigits = deleted.filter(\.isNumber).count
-                if deletedDigits > 0 {
-                    let end = min(digits.count, digitsBefore + deletedDigits)
-                    if digitsBefore < end { digits.removeSubrange(digitsBefore..<end) }
-                    apply(String(digits), cursor: digitsBefore, to: textView)
-                } else if !deleted.isEmpty, digitsBefore > 0 {
-                    // only a separator was deleted → remove preceding digit
-                    digits.remove(at: digitsBefore - 1)
-                    apply(String(digits), cursor: digitsBefore - 1, to: textView)
+                let loc = range.location
+                if let prevIdx = slots.lastIndex(where: { $0 < loc }) {
+                    textView.setSelectedRange(NSRange(location: slots[prevIdx], length: 0))
                 }
                 return false
             }
 
-            // ── Insertion — digits only ───────────────────────────────────
-            guard rep.allSatisfy(\.isNumber) else { return false }
+            // Single digit only
+            guard rep.count == 1, let char = rep.first, char.isNumber,
+                  let digit = char.wholeNumberValue else { return false }
 
-            // Remove any selected-range digits first
-            let selDigits = (current as NSString).substring(with: range).filter(\.isNumber).count
-            if selDigits > 0 {
-                let end = min(digits.count, digitsBefore + selDigits)
-                digits.removeSubrange(digitsBefore..<end)
-            }
+            let loc = range.location
+            guard let slotIdx = slots.firstIndex(where: { $0 >= loc }) else { return false }
 
-            for (offset, c) in rep.enumerated() {
-                let pos = digitsBefore + offset
-                guard pos <= digits.count, digits.count < mode.maxDigits else { return false }
-                guard let d = c.wholeNumberValue,
-                      mode.isValid(digit: d, at: pos, digits: String(digits)) else { return false }
-                digits.insert(c, at: pos)
-            }
-
-            apply(String(digits), cursor: digitsBefore + rep.count, to: textView)
-
-            // Auto-commit when all digits are filled — no Enter needed
-            if digits.count == mode.maxDigits {
-                DispatchQueue.main.async { [weak self] in
-                    guard let self, let tf = self.textField else { return }
-                    self.commit(tf)
+            // Per-digit validity (reject immediately, flash red)
+            guard mode.isDigitValid(digit, atSlot: slotIdx, str: current) else {
+                textView.textColor = .systemRed
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                    if self?.hasError == false { textView.textColor = .labelColor }
                 }
+                return false
             }
+
+            // Entering a new segment after error — reset error state
+            if hasError { hasError = false; textView.textColor = .labelColor }
+
+            // Overwrite digit in place
+            var chars = Array(current)
+            chars[slots[slotIdx]] = char
+            let newStr = String(chars)
+            textView.string = newStr
+
+            let seg = mode.segment(ofSlot: slotIdx)
+            let isLastInSeg = slotIdx == mode.lastSlot(inSeg: seg)
+
+            if isLastInSeg {
+                if mode.isSegmentValid(seg, str: newStr) {
+                    textView.textColor = .labelColor
+                    let nextSlotIdx = slotIdx + 1
+                    if nextSlotIdx < slots.count {
+                        // Advance to next segment
+                        textView.setSelectedRange(NSRange(location: slots[nextSlotIdx], length: 0))
+                    } else {
+                        // All segments done — commit
+                        textView.setSelectedRange(NSRange(location: newStr.count, length: 0))
+                        DispatchQueue.main.async { [weak self] in
+                            guard let self, let tf = self.textField else { return }
+                            if let d = self.mode.commit(str: newStr, into: self.binding.wrappedValue) {
+                                self.binding.wrappedValue = d
+                                tf.textColor = .labelColor
+                            } else {
+                                tf.textColor = .systemRed
+                                self.hasError = true
+                                let firstPos = slots[self.mode.firstSlot(inSeg: seg)]
+                                (tf.currentEditor() as? NSTextView)?.setSelectedRange(NSRange(location: firstPos, length: 0))
+                            }
+                        }
+                    }
+                } else {
+                    // Invalid segment — red, cursor back to start of segment
+                    hasError = true
+                    textView.textColor = .systemRed
+                    textView.setSelectedRange(
+                        NSRange(location: slots[mode.firstSlot(inSeg: seg)], length: 0))
+                }
+            } else {
+                // Mid-segment — advance one slot
+                textView.setSelectedRange(NSRange(location: slots[slotIdx + 1], length: 0))
+            }
+
             return false
-        }
-
-        // MARK: helpers
-
-        private func apply(_ digits: String, cursor digitIdx: Int, to tv: NSTextView) {
-            let masked = mode.mask(digits)
-            let pos = maskedPos(digitIdx: digitIdx, in: masked)
-            tv.string = masked
-            tv.setSelectedRange(NSRange(location: pos, length: 0))
-        }
-
-        private func maskedPos(digitIdx: Int, in masked: String) -> Int {
-            var count = 0
-            let chars = Array(masked)
-            for i in 0..<chars.count {
-                if count == digitIdx {
-                    // Skip any separator at this position so cursor lands
-                    // at the start of the next segment, not on the separator.
-                    var j = i
-                    while j < chars.count && !chars[j].isNumber { j += 1 }
-                    return j
-                }
-                if chars[i].isNumber { count += 1 }
-            }
-            return masked.count
-        }
-
-        private func commit(_ tf: NSTextField) {
-            let digits = tf.stringValue.filter(\.isNumber)
-            switch mode {
-            case .date(let minDate):
-                let f = DateFormatter()
-                f.dateFormat = "ddMMyyyy"
-                f.isLenient = false          // reject 31/02, 31/04, etc.
-                f.locale = Locale(identifier: "en_US_POSIX")
-                guard digits.count == 8, let parsed = f.date(from: digits) else {
-                    tf.stringValue = mode.format(binding.wrappedValue)
-                    shake(tf)
-                    return
-                }
-                var merged = mergeDate(parsed)
-                if let min = minDate, merged < min { merged = min }
-                binding.wrappedValue = merged
-                tf.stringValue = mode.format(merged)
-            case .time:
-                guard digits.count == 4,
-                      let h = Int(digits.prefix(2)), h <= 23,
-                      let m = Int(digits.suffix(2)), m <= 59 else {
-                    tf.stringValue = mode.format(binding.wrappedValue)
-                    shake(tf)
-                    return
-                }
-                binding.wrappedValue = mergeTime(h, m)
-                tf.stringValue = mode.format(binding.wrappedValue)
-            }
-        }
-
-        /// Brief horizontal shake to signal invalid input.
-        private func shake(_ view: NSView) {
-            let anim = CAKeyframeAnimation(keyPath: "position.x")
-            anim.values = [0, -6, 6, -4, 4, -2, 2, 0].map {
-                (view.layer?.position.x ?? 0) + $0
-            }
-            anim.duration = 0.35
-            anim.isAdditive = false
-            view.wantsLayer = true
-            view.layer?.add(anim, forKey: "shake")
-        }
-
-        private func mergeDate(_ src: Date) -> Date {
-            let cal = Calendar.current
-            var c = cal.dateComponents([.hour, .minute, .second], from: binding.wrappedValue)
-            let d = cal.dateComponents([.year, .month, .day], from: src)
-            c.year = d.year; c.month = d.month; c.day = d.day
-            return cal.date(from: c) ?? binding.wrappedValue
-        }
-
-        private func mergeTime(_ h: Int, _ m: Int) -> Date {
-            let cal = Calendar.current
-            var c = cal.dateComponents([.year, .month, .day], from: binding.wrappedValue)
-            c.hour = h; c.minute = m; c.second = 0
-            return cal.date(from: c) ?? binding.wrappedValue
         }
     }
 }
