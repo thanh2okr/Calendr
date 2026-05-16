@@ -465,7 +465,7 @@ private struct NativeDatePicker: NSViewRepresentable {
     func makeNSView(context: Context) -> NSDatePicker {
         let picker = NSDatePicker()
         picker.datePickerStyle = .textFieldAndStepper
-        picker.presentsCalendarOverlay = false
+        picker.presentsCalendarOverlay = true
         picker.isBezeled = false
         picker.isBordered = false
         picker.drawsBackground = false

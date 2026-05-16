@@ -63,6 +63,11 @@ class HostingWindowController<RootView: View>: NSHostingController<RootView>, NS
         }
 
         windowConfiguration?(window)
+
+        // Sync view layer transparency so the hosting view doesn't paint a
+        // solid rectangle behind a glass/borderless window.
+        view.wantsLayer = true
+        view.layer?.backgroundColor = window.isOpaque ? nil : .clear
     }
 
     override func cancelOperation(_ sender: Any?) {
