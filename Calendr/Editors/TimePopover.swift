@@ -74,7 +74,7 @@ struct TimePopover: View {
             // ── Text field ────────────────────────────────────────────
             TextField("HH:MM", text: $draft)
                 .textFieldStyle(.plain)
-                .font(.system(size: 12.5, weight: .bold, design: .monospaced))
+                .font(.system(size: 13, weight: .bold, design: .monospaced))
                 .multilineTextAlignment(.center)
                 .focused($focused)
                 .onSubmit { commitInput() }
@@ -242,14 +242,14 @@ private struct SlotRowView: View {
         Button(action: onTap) {
             HStack(spacing: 0) {
                 Text(slot)
-                    .font(.system(size: 11.5, weight: isSelected ? .bold : .regular, design: .monospaced))
+                    .font(.system(size: 12, weight: isSelected ? .bold : .regular, design: .monospaced))
                     .foregroundStyle(isSelected ? Color.white : Color.primary)
                     .frame(maxWidth: .infinity, alignment: durationLabel == nil ? .center : .leading)
                     .padding(.leading, durationLabel == nil ? 0 : 10)
 
                 if let dur = durationLabel {
                     Text(dur)
-                        .font(.system(size: 9, design: .monospaced))
+                        .font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(isSelected ? Color.white.opacity(0.7) : Color.secondary)
                         .padding(.trailing, 8)
                 }

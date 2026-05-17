@@ -78,7 +78,7 @@ struct CalendarPopover: View {
                 navButton("chevron.left")  { prevMonth() }
                 Spacer()
                 Text(monthTitle)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                 Spacer()
                 navButton("chevron.right") { nextMonth() }
             }
@@ -87,7 +87,7 @@ struct CalendarPopover: View {
             LazyVGrid(columns: gridColumns, spacing: 1) {
                 ForEach(Self.weekdayLabels, id: \.self) { label in
                     Text(label)
-                        .font(.system(size: 9.5, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                 }
@@ -132,7 +132,7 @@ struct CalendarPopover: View {
                     onClose()
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 10.5, weight: .bold))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(Color.accentColor)
             }
         }
@@ -146,8 +146,8 @@ struct CalendarPopover: View {
     private func navButton(_ image: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: image)
-                .font(.system(size: 11, weight: .semibold))
-                .frame(width: 22, height: 22)
+                .font(.system(size: 13, weight: .semibold))
+                .frame(width: 24, height: 24)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -198,7 +198,7 @@ private struct DayCellView: View {
     var body: some View {
         Button(action: onTap) {
             Text("\(day)")
-                .font(.system(size: 10.5, weight: isSelected || isToday ? .bold : .regular))
+                .font(.system(size: 12, weight: isSelected || isToday ? .bold : .regular))
                 .foregroundStyle(foregroundColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .aspectRatio(1, contentMode: .fit)
