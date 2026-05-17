@@ -3,6 +3,7 @@
 //  CalXExtension
 //
 
+import AppIntents
 import WidgetKit
 import SwiftUI
 
@@ -257,14 +258,46 @@ private let allQuotes: [QuoteItem] = [
     QuoteItem(text: "You are enough just as you are.", author: "Unknown"),
 ]
 
-// MARK: - Quote rotation (mỗi 3 giờ đổi 1 quote)
+// MARK: - Frequency Intent
 
-private func quoteIndex(for date: Date) -> Int {
-    let cal = Calendar.current
-    let dayOfYear = cal.ordinality(of: .day, in: .year, for: date) ?? 1
-    let hour      = cal.component(.hour, from: date)
-    let slot      = hour / 3                          // 8 slot/ngày
-    return ((dayOfYear - 1) * 8 + slot) % allQuotes.count
+enum QuoteFrequency: String, AppEnum {
+    case daily   = "daily"
+    case every6h = "every6h"
+    case every3h = "every3h"
+
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Tần suất")
+    static var caseDisplayRepresentations: [QuoteFrequency: DisplayRepresentation] = [
+        .daily:   DisplayRepresentation(title: "Mỗi ngày"),
+        .every6h: DisplayRepresentation(title: "Mỗi 6 giờ"),
+        .every3h: DisplayRepresentation(title: "Mỗi 3 giờ"),
+    ]
+
+    var hoursPerSlot: Int {
+        switch self {
+        case .daily:   return 24
+        case .every6h: return 6
+        case .every3h: return 3
+        }
+    }
+    var slotsPerDay: Int { 24 / hoursPerSlot }
+}
+
+struct CalXQuoteIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "CalX Quotes"
+    static var description = IntentDescription("Tùy chỉnh tần suất đổi câu quote.")
+
+    @Parameter(title: "Tần suất", default: .daily)
+    var frequency: QuoteFrequency
+}
+
+// MARK: - Quote rotation
+
+private func quoteIndex(for date: Date, frequency: QuoteFrequency) -> Int {
+    let cal        = Calendar.current
+    let dayOfYear  = cal.ordinality(of: .day, in: .year, for: date) ?? 1
+    let hour       = cal.component(.hour, from: date)
+    let slot       = hour / frequency.hoursPerSlot
+    return ((dayOfYear - 1) * frequency.slotsPerDay + slot) % allQuotes.count
 }
 
 // MARK: - Timeline
@@ -273,30 +306,43 @@ struct CalXQuoteEntry: TimelineEntry {
     let date: Date
     let quote: QuoteItem
     let backgroundStyle: WidgetBackgroundStyle
+    let frequency: QuoteFrequency
 }
 
-struct CalXQuoteProvider: TimelineProvider {
+struct CalXQuoteProvider: AppIntentTimelineProvider {
+    typealias Intent = CalXQuoteIntent
 
     func placeholder(in context: Context) -> CalXQuoteEntry {
-        CalXQuoteEntry(date: Date(), quote: allQuotes[0], backgroundStyle: .dark)
+        CalXQuoteEntry(date: Date(), quote: allQuotes[0], backgroundStyle: .dark, frequency: .daily)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (CalXQuoteEntry) -> Void) {
+    func snapshot(for configuration: CalXQuoteIntent, in context: Context) async -> CalXQuoteEntry {
         let now = Date()
-        completion(CalXQuoteEntry(date: now, quote: allQuotes[quoteIndex(for: now)], backgroundStyle: .dark))
+        return CalXQuoteEntry(
+            date: now,
+            quote: allQuotes[quoteIndex(for: now, frequency: configuration.frequency)],
+            backgroundStyle: .dark,
+            frequency: configuration.frequency
+        )
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<CalXQuoteEntry>) -> Void) {
-        let now = Date()
-        let entries = (0..<8).map { i -> CalXQuoteEntry in
-            let entryDate = Calendar.current.date(byAdding: .hour, value: i * 3, to: now) ?? now
+    func timeline(for configuration: CalXQuoteIntent, in context: Context) async -> Timeline<CalXQuoteEntry> {
+        let now  = Date()
+        let freq = configuration.frequency
+        let cal  = Calendar.current
+
+        // Sinh entries cho 24h tới, bước nhảy = hoursPerSlot
+        let slots = freq.slotsPerDay
+        let entries: [CalXQuoteEntry] = (0..<slots).compactMap { i in
+            guard let entryDate = cal.date(byAdding: .hour, value: i * freq.hoursPerSlot, to: now) else { return nil }
             return CalXQuoteEntry(
                 date: entryDate,
-                quote: allQuotes[quoteIndex(for: entryDate)],
-                backgroundStyle: .dark
+                quote: allQuotes[quoteIndex(for: entryDate, frequency: freq)],
+                backgroundStyle: .dark,
+                frequency: freq
             )
         }
-        completion(Timeline(entries: entries, policy: .atEnd))
+        return Timeline(entries: entries, policy: .atEnd)
     }
 }
 
@@ -312,8 +358,8 @@ private var widgetDisplayName: String {
 
 private var widgetDescription: String {
     isVietnamese
-        ? "Câu trích dẫn truyền cảm hứng, đổi mới mỗi 3 giờ."
-        : "Inspiring quotes, refreshed every 3 hours."
+        ? "Câu trích dẫn truyền cảm hứng. Tuỳ chỉnh tần suất: mỗi ngày, 6h hoặc 3h."
+        : "Inspiring quotes. Configure frequency: daily, every 6h or 3h."
 }
 
 // MARK: - Views
@@ -419,7 +465,7 @@ struct CalXQuoteWidget: Widget {
     let kind = "CalXQuoteWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: CalXQuoteProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: CalXQuoteIntent.self, provider: CalXQuoteProvider()) { entry in
             CalXQuoteWidgetView(entry: entry)
                 .containerBackground(for: .widget) {
                     WidgetCardBackground(backgroundStyle: entry.backgroundStyle)

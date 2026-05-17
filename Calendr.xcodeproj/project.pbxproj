@@ -17,6 +17,7 @@
 		34E8556D2C711D1A00757B58 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 34E8556C2C711D1A00757B58 /* ZIPFoundation */; };
 		FFAE051A2FB9CB9300D2F656 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FFAE05192FB9CB9300D2F656 /* WidgetKit.framework */; };
 		FFAE051C2FB9CB9300D2F656 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FFAE051B2FB9CB9300D2F656 /* SwiftUI.framework */; };
+		AA01B2C3D4E5F6A700B2C3D4 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA01B2C3D4E5F6A700000001 /* AppIntents.framework */; };
 		0366F0CD246D4DDCBBC020AC /* CalXExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FFAE05172FB9CB9300D2F656 /* CalXExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 		FFAE05172FB9CB9300D2F656 /* CalXExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CalXExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFAE05192FB9CB9300D2F656 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		FFAE051B2FB9CB9300D2F656 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		AA01B2C3D4E5F6A700000001 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -140,6 +142,7 @@
 			files = (
 				FFAE051C2FB9CB9300D2F656 /* SwiftUI.framework in Frameworks */,
 				FFAE051A2FB9CB9300D2F656 /* WidgetKit.framework in Frameworks */,
+				AA01B2C3D4E5F6A700B2C3D4 /* AppIntents.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -174,6 +177,7 @@
 			children = (
 				FFAE05192FB9CB9300D2F656 /* WidgetKit.framework */,
 				FFAE051B2FB9CB9300D2F656 /* SwiftUI.framework */,
+				AA01B2C3D4E5F6A700000001 /* AppIntents.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
