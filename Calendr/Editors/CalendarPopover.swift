@@ -136,8 +136,8 @@ struct CalendarPopover: View {
                 .foregroundStyle(Color.accentColor)
             }
         }
-        .padding(12)
-        .frame(width: 248)
+        .padding(6)
+        .frame(width: 236)
     }
 
     // MARK: - Helpers

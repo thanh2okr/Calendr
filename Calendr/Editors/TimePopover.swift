@@ -70,8 +70,8 @@ struct TimePopover: View {
 
                 segmentField(text: $minuteDraft, placeholder: "MM", seg: .minute)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.gray.opacity(0.15))
@@ -113,8 +113,8 @@ struct TimePopover: View {
                 .onChange(of: minuteDraft) { _, _ in scrollToFirst(proxy: proxy) }
             }
         }
-        .padding(12)
-        .frame(width: 164)
+        .padding(6)
+        .frame(width: 152)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
