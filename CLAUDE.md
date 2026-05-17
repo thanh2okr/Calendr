@@ -10,9 +10,24 @@ xcodebuild -scheme CalX -configuration Debug build \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
 # Deploy
-pkill -x "Calendr" 2>/dev/null; sleep 1
+DERIVED_DATA=~/Library/Developer/Xcode/DerivedData/Calendr-bppsixpgyylfhieddzefoitcqxpo
+pkill -x "CalX" 2>/dev/null; pkill -x "Calendr" 2>/dev/null; sleep 1
 rm -rf /Applications/CalX.app
-cp -R "$DERIVED_DATA/Build/Products/Debug/Calendr.app" /Applications/CalX.app
+cp -R "$DERIVED_DATA/Build/Products/Debug/CalX.app" /Applications/CalX.app
+
+# Sign widget extension (required for pluginkit to register it)
+cat > /tmp/widget.entitlements << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>com.apple.security.app-sandbox</key><true/></dict></plist>
+PLIST
+codesign --force --sign "Apple Development: openthanh@gmail.com (5J9DN62KXP)" \
+  --entitlements /tmp/widget.entitlements \
+  /Applications/CalX.app/Contents/PlugIns/CalXExtension.appex
+codesign --force --sign "Apple Development: openthanh@gmail.com (5J9DN62KXP)" \
+  /Applications/CalX.app
+pluginkit -e use -i br.paker.CalX.CalXExtension
+
 open /Applications/CalX.app
 ```
 DerivedData: `~/Library/Developer/Xcode/DerivedData/Calendr-bppsixpgyylfhieddzefoitcqxpo`

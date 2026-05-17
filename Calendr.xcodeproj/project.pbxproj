@@ -15,6 +15,9 @@
 		34DA13C52EDA20480031F8FF /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = 34DA13C42EDA20480031F8FF /* Clocks */; };
 		34E259832B659B5600074D3A /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 34E259822B659B5600074D3A /* KeyboardShortcuts */; };
 		34E8556D2C711D1A00757B58 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 34E8556C2C711D1A00757B58 /* ZIPFoundation */; };
+		FFAE051A2FB9CB9300D2F656 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FFAE05192FB9CB9300D2F656 /* WidgetKit.framework */; };
+		FFAE051C2FB9CB9300D2F656 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FFAE051B2FB9CB9300D2F656 /* SwiftUI.framework */; };
+		0366F0CD246D4DDCBBC020AC /* CalXExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FFAE05172FB9CB9300D2F656 /* CalXExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,12 +35,22 @@
 			remoteGlobalIDString = 347D0F9325952F89002451EC;
 			remoteInfo = Calendr;
 		};
+		779533E2DAC84AB28C7C2275 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 347D0F8C25952F89002451EC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FFAE05162FB9CB9300D2F656;
+			remoteInfo = CalXExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		34427697269B5CA4004CFE1C /* CalendrUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalendrUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		347D0F9425952F89002451EC /* Calendr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Calendr.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		347D0FA425952F8A002451EC /* CalendrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalendrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		34427697269B5CA4004CFE1C /* CalXUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalXUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		347D0F9425952F89002451EC /* CalX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalX.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		347D0FA425952F8A002451EC /* CalXTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalXTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFAE05172FB9CB9300D2F656 /* CalXExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CalXExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFAE05192FB9CB9300D2F656 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		FFAE051B2FB9CB9300D2F656 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -50,14 +63,14 @@
 				Config/swiftgen.yml,
 				Tools/SyncLocalizations.swift,
 			);
-			target = 347D0F9325952F89002451EC /* Calendr */;
+			target = 347D0F9325952F89002451EC /* CalX */;
 		};
 		343F1B2F2F534401000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Constants/Accessibility.swift,
 			);
-			target = 34427696269B5CA4004CFE1C /* CalendrUITests */;
+			target = 34427696269B5CA4004CFE1C /* CalXUITests */;
 		};
 		343F1B3F2F53446E000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -65,7 +78,7 @@
 				Info.plist,
 				UITests.xctestplan,
 			);
-			target = 34427696269B5CA4004CFE1C /* CalendrUITests */;
+			target = 34427696269B5CA4004CFE1C /* CalXUITests */;
 		};
 		343F1B8B2F53453B000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -73,7 +86,14 @@
 				Info.plist,
 				UnitTests.xctestplan,
 			);
-			target = 347D0FA325952F8A002451EC /* CalendrTests */;
+			target = 347D0FA325952F8A002451EC /* CalXTests */;
+		};
+		FFAE05272FB9CB9400D2F656 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FFAE05162FB9CB9300D2F656 /* CalXExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -81,6 +101,7 @@
 		343F1A782F534401000BFD2E /* Calendr */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (343F1B2E2F534401000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 343F1B2F2F534401000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Calendr; sourceTree = "<group>"; };
 		343F1B372F53446E000BFD2E /* CalendrUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (343F1B3F2F53446E000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CalendrUITests; sourceTree = "<group>"; };
 		343F1B662F53453B000BFD2E /* CalendrTests */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (343F1B8B2F53453B000BFD2E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CalendrTests; sourceTree = "<group>"; };
+		FFAE051D2FB9CB9300D2F656 /* CalX */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (FFAE05272FB9CB9400D2F656 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CalX; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +134,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FFAE05142FB9CB9300D2F656 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FFAE051C2FB9CB9300D2F656 /* SwiftUI.framework in Frameworks */,
+				FFAE051A2FB9CB9300D2F656 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -122,6 +152,8 @@
 				343F1A782F534401000BFD2E /* Calendr */,
 				343F1B662F53453B000BFD2E /* CalendrTests */,
 				343F1B372F53446E000BFD2E /* CalendrUITests */,
+				FFAE051D2FB9CB9300D2F656 /* CalX */,
+				FFAE05182FB9CB9300D2F656 /* Frameworks */,
 				347D0F9525952F89002451EC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -129,19 +161,29 @@
 		347D0F9525952F89002451EC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				347D0F9425952F89002451EC /* Calendr.app */,
-				347D0FA425952F8A002451EC /* CalendrTests.xctest */,
-				34427697269B5CA4004CFE1C /* CalendrUITests.xctest */,
+				347D0F9425952F89002451EC /* CalX.app */,
+				347D0FA425952F8A002451EC /* CalXTests.xctest */,
+				34427697269B5CA4004CFE1C /* CalXUITests.xctest */,
+				FFAE05172FB9CB9300D2F656 /* CalXExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		FFAE05182FB9CB9300D2F656 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FFAE05192FB9CB9300D2F656 /* WidgetKit.framework */,
+				FFAE051B2FB9CB9300D2F656 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		34427696269B5CA4004CFE1C /* CalendrUITests */ = {
+		34427696269B5CA4004CFE1C /* CalXUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3442769E269B5CA4004CFE1C /* Build configuration list for PBXNativeTarget "CalendrUITests" */;
+			buildConfigurationList = 3442769E269B5CA4004CFE1C /* Build configuration list for PBXNativeTarget "CalXUITests" */;
 			buildPhases = (
 				34427693269B5CA4004CFE1C /* Sources */,
 				34427694269B5CA4004CFE1C /* Frameworks */,
@@ -155,29 +197,31 @@
 			fileSystemSynchronizedGroups = (
 				343F1B372F53446E000BFD2E /* CalendrUITests */,
 			);
-			name = CalendrUITests;
+			name = CalXUITests;
 			productName = CalendrUITests;
-			productReference = 34427697269B5CA4004CFE1C /* CalendrUITests.xctest */;
+			productReference = 34427697269B5CA4004CFE1C /* CalXUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		347D0F9325952F89002451EC /* Calendr */ = {
+		347D0F9325952F89002451EC /* CalX */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 347D0FB825952F8A002451EC /* Build configuration list for PBXNativeTarget "Calendr" */;
+			buildConfigurationList = 347D0FB825952F8A002451EC /* Build configuration list for PBXNativeTarget "CalX" */;
 			buildPhases = (
 				345E93BB2CA064A00048EEA4 /* SyncLocalizations */,
 				34651EFA25E1B10000518C5A /* SwiftGen */,
 				347D0F9025952F89002451EC /* Sources */,
 				347D0F9125952F89002451EC /* Frameworks */,
 				347D0F9225952F89002451EC /* Resources */,
+				B2B0E6CDED154F3D9632CEDD /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0C3F6CF505394C14AF1159C7 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				343F1A782F534401000BFD2E /* Calendr */,
 			);
-			name = Calendr;
+			name = CalX;
 			packageProductDependencies = (
 				3418207D26755CC80075B3DC /* RxSwift */,
 				3418208326755CC80075B3DC /* RxCocoa */,
@@ -188,12 +232,12 @@
 				34DA13C42EDA20480031F8FF /* Clocks */,
 			);
 			productName = Calendr;
-			productReference = 347D0F9425952F89002451EC /* Calendr.app */;
+			productReference = 347D0F9425952F89002451EC /* CalX.app */;
 			productType = "com.apple.product-type.application";
 		};
-		347D0FA325952F8A002451EC /* CalendrTests */ = {
+		347D0FA325952F8A002451EC /* CalXTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 347D0FBB25952F8A002451EC /* Build configuration list for PBXNativeTarget "CalendrTests" */;
+			buildConfigurationList = 347D0FBB25952F8A002451EC /* Build configuration list for PBXNativeTarget "CalXTests" */;
 			buildPhases = (
 				347D0FA025952F8A002451EC /* Sources */,
 				347D0FA125952F8A002451EC /* Frameworks */,
@@ -207,13 +251,35 @@
 			fileSystemSynchronizedGroups = (
 				343F1B662F53453B000BFD2E /* CalendrTests */,
 			);
-			name = CalendrTests;
+			name = CalXTests;
 			packageProductDependencies = (
 				3418207F26755CC80075B3DC /* RxTest */,
 			);
 			productName = CalendrTests;
-			productReference = 347D0FA425952F8A002451EC /* CalendrTests.xctest */;
+			productReference = 347D0FA425952F8A002451EC /* CalXTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FFAE05162FB9CB9300D2F656 /* CalXExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FFAE05282FB9CB9400D2F656 /* Build configuration list for PBXNativeTarget "CalXExtension" */;
+			buildPhases = (
+				FFAE05132FB9CB9300D2F656 /* Sources */,
+				FFAE05142FB9CB9300D2F656 /* Frameworks */,
+				FFAE05152FB9CB9300D2F656 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FFAE051D2FB9CB9300D2F656 /* CalX */,
+			);
+			name = CalXExtension;
+			packageProductDependencies = (
+			);
+			productName = CalXExtension;
+			productReference = FFAE05172FB9CB9300D2F656 /* CalXExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -222,7 +288,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 1250;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					34427696269B5CA4004CFE1C = {
@@ -236,6 +302,9 @@
 					347D0FA325952F8A002451EC = {
 						CreatedOnToolsVersion = 12.3;
 						TestTargetID = 347D0F9325952F89002451EC;
+					};
+					FFAE05162FB9CB9300D2F656 = {
+						CreatedOnToolsVersion = 26.5;
 					};
 				};
 			};
@@ -281,12 +350,27 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				347D0F9325952F89002451EC /* Calendr */,
-				347D0FA325952F8A002451EC /* CalendrTests */,
-				34427696269B5CA4004CFE1C /* CalendrUITests */,
+				347D0F9325952F89002451EC /* CalX */,
+				347D0FA325952F8A002451EC /* CalXTests */,
+				34427696269B5CA4004CFE1C /* CalXUITests */,
+				FFAE05162FB9CB9300D2F656 /* CalXExtension */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B2B0E6CDED154F3D9632CEDD /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0366F0CD246D4DDCBBC020AC /* CalXExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
 		34427695269B5CA4004CFE1C /* Resources */ = {
@@ -310,6 +394,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FFAE05152FB9CB9300D2F656 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -321,39 +412,39 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"${SRCROOT}/${TARGET_NAME}/Tools/SyncLocalizations.swift",
-				"${SRCROOT}/${TARGET_NAME}/Assets/en.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Tools/SyncLocalizations.swift",
+				"${SRCROOT}/Calendr/Assets/en.lproj/Localizable.strings",
 			);
 			name = SyncLocalizations;
 			outputFileListPaths = (
 			);
 			outputPaths = (
 				"${SRCROOT}/MISSING_TRANSLATIONS.md",
-				"${SRCROOT}/${TARGET_NAME}/Assets/de.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/zh-Hans.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/zh-Hant-TW.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/es.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/it.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/sk.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/sv.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/cs.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/fr.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/pt.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/pl.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/ja.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/ko.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/el.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/sq.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/ru.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/tr.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/uk.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/he.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Assets/nl.lproj/Localizable.strings",
-					"${SRCROOT}/${TARGET_NAME}/Assets/vi.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/de.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/zh-Hans.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/zh-Hant-TW.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/es.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/it.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/sk.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/sv.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/cs.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/fr.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/pt.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/pl.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/ja.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/ko.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/el.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/sq.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/ru.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/tr.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/uk.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/he.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/nl.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Assets/vi.lproj/Localizable.strings",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [[ -z $CI ]]; then\n    swift \"${SRCROOT}/${TARGET_NAME}/Tools/SyncLocalizations.swift\"\nfi\n";
+			shellScript = "if [[ -z $CI ]]; then\n    swift \"${SRCROOT}/Calendr/Tools/SyncLocalizations.swift\"\nfi\n";
 		};
 		34651EFA25E1B10000518C5A /* SwiftGen */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -363,14 +454,14 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"${SRCROOT}/${TARGET_NAME}/Assets/en.lproj/Localizable.strings",
-				"${SRCROOT}/${TARGET_NAME}/Config/swiftgen.yml",
+				"${SRCROOT}/Calendr/Assets/en.lproj/Localizable.strings",
+				"${SRCROOT}/Calendr/Config/swiftgen.yml",
 			);
 			name = SwiftGen;
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"${SRCROOT}/${TARGET_NAME}/Constants/Strings.generated.swift",
+				"${SRCROOT}/Calendr/Constants/Strings.generated.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -400,18 +491,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FFAE05132FB9CB9300D2F656 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		3442769D269B5CA4004CFE1C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 347D0F9325952F89002451EC /* Calendr */;
+			target = 347D0F9325952F89002451EC /* CalX */;
 			targetProxy = 3442769C269B5CA4004CFE1C /* PBXContainerItemProxy */;
 		};
 		347D0FA625952F8A002451EC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 347D0F9325952F89002451EC /* Calendr */;
+			target = 347D0F9325952F89002451EC /* CalX */;
 			targetProxy = 347D0FA525952F8A002451EC /* PBXContainerItemProxy */;
+		};
+		0C3F6CF505394C14AF1159C7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FFAE05162FB9CB9300D2F656 /* CalXExtension */;
+			targetProxy = 779533E2DAC84AB28C7C2275 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -590,7 +693,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -624,7 +727,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -690,10 +793,82 @@
 			};
 			name = Release;
 		};
+		FFAE05252FB9CB9400D2F656 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CalX/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CalX;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = br.paker.CalX.CalXExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FFAE05262FB9CB9400D2F656 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CalX/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CalX;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = br.paker.CalX.CalXExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		3442769E269B5CA4004CFE1C /* Build configuration list for PBXNativeTarget "CalendrUITests" */ = {
+		3442769E269B5CA4004CFE1C /* Build configuration list for PBXNativeTarget "CalXUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3442769F269B5CA4004CFE1C /* Debug */,
@@ -711,7 +886,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		347D0FB825952F8A002451EC /* Build configuration list for PBXNativeTarget "Calendr" */ = {
+		347D0FB825952F8A002451EC /* Build configuration list for PBXNativeTarget "CalX" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				347D0FB925952F8A002451EC /* Debug */,
@@ -720,11 +895,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		347D0FBB25952F8A002451EC /* Build configuration list for PBXNativeTarget "CalendrTests" */ = {
+		347D0FBB25952F8A002451EC /* Build configuration list for PBXNativeTarget "CalXTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				347D0FBC25952F8A002451EC /* Debug */,
 				347D0FBD25952F8A002451EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FFAE05282FB9CB9400D2F656 /* Build configuration list for PBXNativeTarget "CalXExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FFAE05252FB9CB9400D2F656 /* Debug */,
+				FFAE05262FB9CB9400D2F656 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

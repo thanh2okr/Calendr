@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "347D0F9325952F89002451EC"
-               BuildableName = "Calendr.app"
-               BlueprintName = "Calendr"
+               BuildableName = "CalX.app"
+               BlueprintName = "CalX"
                ReferencedContainer = "container:Calendr.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "347D0FA325952F8A002451EC"
-               BuildableName = "CalendrTests.xctest"
-               BlueprintName = "CalendrTests"
+               BuildableName = "CalXTests.xctest"
+               BlueprintName = "CalXTests"
                ReferencedContainer = "container:Calendr.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -56,8 +56,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "347D0FA325952F8A002451EC"
-               BuildableName = "CalendrTests.xctest"
-               BlueprintName = "CalendrTests"
+               BuildableName = "CalXTests.xctest"
+               BlueprintName = "CalXTests"
                ReferencedContainer = "container:Calendr.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -66,8 +66,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "34427696269B5CA4004CFE1C"
-               BuildableName = "CalendrUITests.xctest"
-               BlueprintName = "CalendrUITests"
+               BuildableName = "CalXUITests.xctest"
+               BlueprintName = "CalXUITests"
                ReferencedContainer = "container:Calendr.xcodeproj">
             </BuildableReference>
             <SelectedTests>
@@ -142,8 +142,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "347D0F9325952F89002451EC"
-            BuildableName = "Calendr.app"
-            BlueprintName = "Calendr"
+            BuildableName = "CalX.app"
+            BlueprintName = "CalX"
             ReferencedContainer = "container:Calendr.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -158,8 +158,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "347D0F9325952F89002451EC"
-            BuildableName = "Calendr.app"
-            BlueprintName = "Calendr"
+            BuildableName = "CalX.app"
+            BlueprintName = "CalX"
             ReferencedContainer = "container:Calendr.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
