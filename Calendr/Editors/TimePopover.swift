@@ -13,13 +13,14 @@ struct TimePopover: View {
     var referenceDate: Date? = nil
     var onClose: () -> Void
 
-    /// draft bắt đầu rỗng → 48 slot hiện đầy đủ khi mở, không bị filter ngay
-    @State private var draft: String = ""
-    /// Precomputed once in onAppear — tránh gọi cal.date(from:) 48× mỗi render
+    @State private var hourDraft: String = ""
+    @State private var minuteDraft: String = ""
     @State private var durationLabels: [String: String] = [:]
-    @FocusState private var focused: Bool
+    @FocusState private var segment: InputSegment?
 
     private let cal = Calendar.current
+
+    private enum InputSegment: Hashable { case hour, minute }
 
     // MARK: - Static data
 
@@ -27,31 +28,18 @@ struct TimePopover: View {
         String(format: "%02d:%02d", $0 / 2, ($0 % 2) * 30)
     }
 
-    /// Regex literal → compiled at build time, zero runtime cost
-    private static let validRegex = /^([0-1]\d|2[0-3]):[0-5]\d$/
-
     // MARK: - Filtering
 
-    /// Single trimmed copy, used in both filterPrefix and filteredSlots
-    private var trimmedDraft: String {
-        draft.trimmingCharacters(in: .whitespaces)
-    }
-
-    /// Pad single-digit hour: "9" → "09", "9:3" → "09:3"
-    private var filterPrefix: String {
-        let t = trimmedDraft
-        let hourPart = t.prefix(while: { $0 != ":" })
-        return hourPart.count == 1 && hourPart.first?.isNumber == true ? "0" + t : t
-    }
-
     private var filteredSlots: [String] {
-        guard !trimmedDraft.isEmpty else { return Self.allSlots }
-        let prefix = filterPrefix
-        return Self.allSlots.filter { $0.hasPrefix(prefix) }
+        guard !hourDraft.isEmpty else { return Self.allSlots }
+        let hPad = hourDraft.count == 1 ? "0\(hourDraft)" : hourDraft
+        guard !minuteDraft.isEmpty else {
+            return Self.allSlots.filter { $0.hasPrefix(hPad) }
+        }
+        return Self.allSlots.filter { $0.hasPrefix("\(hPad):\(minuteDraft)") }
     }
 
     /// Slot gần nhất với `selection` để scroll khi mở
-    /// → hoạt động ngay cả khi selection là "13:15" (không phải slot tròn 30 phút)
     private var nearestSlot: String? {
         if Self.allSlots.contains(selection) { return selection }
         let parts = selection.split(separator: ":")
@@ -71,32 +59,33 @@ struct TimePopover: View {
     var body: some View {
         VStack(spacing: 6) {
 
-            // ── Text field ────────────────────────────────────────────
-            TextField("HH:MM", text: $draft)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .bold, design: .monospaced))
-                .multilineTextAlignment(.center)
-                .focused($focused)
-                .onSubmit { commitInput() }
-                .onKeyPress(.escape) { onClose(); return .handled }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.gray.opacity(0.15))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.primary.opacity(0.12), lineWidth: 0.5)
-                        )
-                )
+            // ── Segmented HH : MM input ───────────────────────────────
+            HStack(spacing: 0) {
+                segmentField(text: $hourDraft, placeholder: "HH", seg: .hour)
+
+                Text(":")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.primary.opacity(0.35))
+                    .frame(width: 12)
+
+                segmentField(text: $minuteDraft, placeholder: "MM", seg: .minute)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.gray.opacity(0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.primary.opacity(0.12), lineWidth: 0.5)
+                    )
+            )
 
             // ── Slot list ─────────────────────────────────────────────
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     LazyVStack(spacing: 2) {
                         ForEach(filteredSlots, id: \.self) { slot in
-                            // SlotRowView manages its own hover state →
-                            // hovering một slot không re-render các slot khác
                             SlotRowView(
                                 slot: slot,
                                 isSelected: slot == selection,
@@ -112,20 +101,16 @@ struct TimePopover: View {
                 }
                 .frame(maxHeight: 168)
                 .onAppear {
-                    buildDurationLabels()   // chạy 1 lần, cache kết quả
+                    buildDurationLabels()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                        focused = true
+                        segment = .hour
                         if let target = nearestSlot {
                             proxy.scrollTo(target, anchor: .center)
                         }
                     }
                 }
-                .onChange(of: draft) { _, _ in
-                    guard !trimmedDraft.isEmpty else { return }
-                    let slots = filteredSlots
-                    guard let first = slots.first else { return }
-                    proxy.scrollTo(first, anchor: slots.count == 1 ? .center : .top)
-                }
+                .onChange(of: hourDraft)   { _, _ in scrollToFirst(proxy: proxy) }
+                .onChange(of: minuteDraft) { _, _ in scrollToFirst(proxy: proxy) }
             }
         }
         .padding(8)
@@ -134,24 +119,110 @@ struct TimePopover: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    // MARK: - Segment field builder
+
+    @ViewBuilder
+    private func segmentField(text: Binding<String>, placeholder: String, seg: InputSegment) -> some View {
+        TextField("", text: text)
+            .textFieldStyle(.plain)
+            .font(.system(size: 13, weight: .bold, design: .monospaced))
+            .multilineTextAlignment(.center)
+            .focused($segment, equals: seg)
+            .frame(width: 28)
+            .onSubmit { commitInput() }
+            .onKeyPress(.escape) { onClose(); return .handled }
+            .onKeyPress(.delete) {
+                // Backspace ở phút rỗng → quay về giờ
+                guard text.wrappedValue.isEmpty, seg == .minute else { return .ignored }
+                segment = .hour
+                return .handled
+            }
+            .onChange(of: text.wrappedValue) { _, new in
+                handleChange(new, seg: seg, binding: text)
+            }
+            .overlay {
+                if text.wrappedValue.isEmpty {
+                    Text(placeholder)
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(.horizontal, 5)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(segment == seg ? Color.accentColor.opacity(0.13) : Color.clear)
+                    .animation(.easeInOut(duration: 0.1), value: segment)
+            )
+    }
+
+    // MARK: - Input handling
+
+    private func handleChange(_ new: String, seg: InputSegment, binding: Binding<String>) {
+        // Chỉ giữ chữ số, tối đa 2 ký tự
+        let digits = String(new.filter(\.isNumber).prefix(2))
+        if digits != new { binding.wrappedValue = digits }
+
+        switch seg {
+        case .hour:
+            guard !digits.isEmpty else { return }
+            if digits.count == 2 {
+                // "25" → không hợp lệ → revert về ký tự đầu, không nhảy
+                if let h = Int(digits), h > 23 {
+                    binding.wrappedValue = String(digits.prefix(1))
+                    return
+                }
+                segment = .minute   // 2 chữ số hợp lệ → nhảy phút
+            } else if (Int(digits) ?? 0) > 2 {
+                // Chữ số đơn > 2 (3–9) → không thể là prefix của giờ hợp lệ (30–99) → nhảy luôn
+                segment = .minute
+            }
+
+        case .minute:
+            guard !digits.isEmpty else { return }
+            if digits.count == 2 {
+                // "67" → không hợp lệ → revert, không commit
+                if let m = Int(digits), m > 59 {
+                    binding.wrappedValue = String(digits.prefix(1))
+                    return
+                }
+                commitInput()   // 2 chữ số hợp lệ → tự commit
+            }
+        }
+    }
+
     // MARK: - Commit
 
     private func commitInput() {
-        let q = trimmedDraft
-        guard !q.isEmpty else { onClose(); return }
+        // Không gõ gì → chỉ đóng
+        guard !hourDraft.isEmpty || !minuteDraft.isEmpty else { onClose(); return }
 
-        // 1. Ưu tiên slot đầu tiên trong danh sách đã filter
+        let h = Int(hourDraft), m = Int(minuteDraft)
+
+        // 1. Cả hai hợp lệ → commit trực tiếp
+        if let h, let m, (0...23).contains(h), (0...59).contains(m) {
+            selection = String(format: "%02d:%02d", h, m)
+            onClose()
+            return
+        }
+
+        // 2. Fallback: slot đầu tiên trong danh sách đã filter
         if let first = filteredSlots.first {
-            selection = first; onClose(); return
+            selection = first
+            onClose()
+            return
         }
 
-        // 2. Fallback: normalize thô → validate → commit
-        let normalized = normalizeTime(q)
-        if !normalized.isEmpty {
-            selection = normalized; onClose(); return
-        }
+        onClose()
+    }
 
-        onClose()  // không hợp lệ → chỉ đóng, không thay đổi selection
+    // MARK: - Scroll helper
+
+    private func scrollToFirst(proxy: ScrollViewProxy) {
+        let slots = filteredSlots
+        guard let first = slots.first else { return }
+        proxy.scrollTo(first, anchor: slots.count == 1 ? .center : .top)
     }
 
     // MARK: - Duration labels (precomputed)
@@ -173,63 +244,10 @@ struct TimePopover: View {
         }
         durationLabels = result
     }
-
-    // MARK: - Normalize + Validate
-
-    private func isValid(_ s: String) -> Bool {
-        (try? Self.validRegex.wholeMatch(in: s)) != nil
-    }
-
-    /// "9"→"09:00"  "9:5"→"09:05"  "9h30"→"09:30"  "930"→"09:30"  "1330"→"13:30"
-    private func normalizeTime(_ raw: String) -> String {
-        let t = raw.lowercased()
-
-        // "9h30", "15h", "9h3"
-        if let range = t.range(of: #"^(\d{1,2})h(\d{0,2})$"#, options: .regularExpression) {
-            let parts = String(t[range]).components(separatedBy: "h")
-            let h = Int(parts[0]) ?? -1
-            let m = parts.count > 1 && !parts[1].isEmpty ? (Int(parts[1]) ?? -1) : 0
-            if (0...23).contains(h) && (0...59).contains(m) {
-                return validated(String(format: "%02d:%02d", h, m))
-            }
-        }
-
-        // "9:5", "9:30", "13:30"
-        let cp = t.split(separator: ":", maxSplits: 1).map(String.init)
-        if cp.count == 2, let h = Int(cp[0]), let m = Int(cp[1]),
-           (0...23).contains(h) && (0...59).contains(m) {
-            return validated(String(format: "%02d:%02d", h, m))
-        }
-
-        // "9" "13" "930" "1330"
-        let digits = t.filter(\.isNumber)
-        switch digits.count {
-        case 1, 2:
-            if let h = Int(digits), (0...23).contains(h) {
-                return validated(String(format: "%02d:00", h))
-            }
-        case 3:
-            if let h = Int(digits.prefix(1)), let m = Int(digits.suffix(2)),
-               (0...23).contains(h) && (0...59).contains(m) {
-                return validated(String(format: "%02d:%02d", h, m))
-            }
-        case 4:
-            if let h = Int(digits.prefix(2)), let m = Int(digits.suffix(2)),
-               (0...23).contains(h) && (0...59).contains(m) {
-                return validated(String(format: "%02d:%02d", h, m))
-            }
-        default: break
-        }
-        return ""
-    }
-
-    private func validated(_ s: String) -> String { isValid(s) ? s : "" }
 }
 
 // MARK: - SlotRowView
 
-/// Tách thành struct riêng với @State isHovered cục bộ.
-/// Khi hover, chỉ view này re-render — KHÔNG kéo theo các slot khác trong LazyVStack.
 private struct SlotRowView: View {
     let slot: String
     let isSelected: Bool
@@ -279,7 +297,7 @@ private struct SlotRowView: View {
 }
 
 #Preview("End time — with duration labels") {
-    @Previewable @State var time = "13:15"   // non-round → tests nearest-slot scroll
+    @Previewable @State var time = "13:15"
     let ref = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: .now)!
     TimePopover(selection: $time, referenceDate: ref, onClose: {})
 }
