@@ -190,7 +190,7 @@ struct ReminderDialog: View {
             .background(.primary.opacity(0.05))
             .overlay(Divider(), alignment: .top)
         }
-        .frame(width: 380)
+        .frame(width: 420)
         .onChange(of: reminderCalendars) { _, newCalendars in
             if reminderCalendarID.isEmpty, let first = newCalendars.first {
                 reminderCalendarID = first.id
@@ -245,7 +245,7 @@ private struct DateRow: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 11, weight: .regular))
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
@@ -281,7 +281,7 @@ private struct DateRow: View {
 
             if showAllDay {
                 Text("Cả ngày")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(.secondary)
                 Toggle("", isOn: $allDay)
                     .labelsHidden()
@@ -318,7 +318,7 @@ private struct DialogRow<Content: View>: View {
     var body: some View {
         HStack(alignment: align, spacing: 10) {
             Text(label)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 11, weight: .regular))
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
             content()
