@@ -169,6 +169,7 @@
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"
+      customArchiveName = "CalX"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

@@ -6,7 +6,7 @@ Target: macOS 26 (Liquid Glass). Bundle ID: `br.paker.CalX`.
 
 ## Build
 ```bash
-xcodebuild -scheme Calendr -configuration Debug build \
+xcodebuild -scheme CalX -configuration Debug build \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
 # Deploy
