@@ -57,7 +57,7 @@ struct TimePopover: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 10) {
 
             // ── Segmented HH : MM input ───────────────────────────────
             HStack(spacing: 0) {
@@ -70,8 +70,8 @@ struct TimePopover: View {
 
                 segmentField(text: $minuteDraft, placeholder: "MM", seg: .minute)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.gray.opacity(0.15))
@@ -99,7 +99,7 @@ struct TimePopover: View {
                     }
                     .padding(.vertical, 2)
                 }
-                .frame(maxHeight: 168)
+                .frame(maxHeight: 180)
                 .onAppear {
                     buildDurationLabels()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -113,8 +113,8 @@ struct TimePopover: View {
                 .onChange(of: minuteDraft) { _, _ in scrollToFirst(proxy: proxy) }
             }
         }
-        .padding(8)
-        .frame(width: 140)
+        .padding(12)
+        .frame(width: 164)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }

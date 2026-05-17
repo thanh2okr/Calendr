@@ -68,11 +68,11 @@ struct CalendarPopover: View {
     }
 
     private var gridColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: 1), count: 7)
+        Array(repeating: GridItem(.flexible(), spacing: 3), count: 7)
     }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 10) {
             // ── Month navigation header ──────────────────────────────
             HStack(spacing: 0) {
                 navButton("chevron.left")  { prevMonth() }
@@ -84,7 +84,7 @@ struct CalendarPopover: View {
             }
 
             // ── Weekday labels ───────────────────────────────────────
-            LazyVGrid(columns: gridColumns, spacing: 1) {
+            LazyVGrid(columns: gridColumns, spacing: 3) {
                 ForEach(Self.weekdayLabels, id: \.self) { label in
                     Text(label)
                         .font(.system(size: 11, weight: .semibold))
@@ -94,7 +94,7 @@ struct CalendarPopover: View {
             }
 
             // ── Day grid (slide animation on month change) ───────────
-            LazyVGrid(columns: gridColumns, spacing: 1) {
+            LazyVGrid(columns: gridColumns, spacing: 3) {
                 ForEach(gridDays) { item in
                     let isSelected  = cal.isDate(item.date, inSameDayAs: selection)
                     let isToday     = cal.isDateInToday(item.date)
@@ -136,8 +136,8 @@ struct CalendarPopover: View {
                 .foregroundStyle(Color.accentColor)
             }
         }
-        .padding(8)
-        .frame(width: 210)
+        .padding(12)
+        .frame(width: 248)
     }
 
     // MARK: - Helpers
