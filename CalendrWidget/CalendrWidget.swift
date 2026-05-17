@@ -201,29 +201,29 @@ private func quoteIndex(for date: Date) -> Int {
 
 // MARK: - Timeline
 
-struct CalendrQuoteEntry: TimelineEntry {
+struct CalXQuoteEntry: TimelineEntry {
     let date: Date
     let quote: QuoteItem
     let backgroundStyle: WidgetBackgroundStyle
 }
 
-struct CalendrQuoteProvider: TimelineProvider {
+struct CalXQuoteProvider: TimelineProvider {
 
-    func placeholder(in context: Context) -> CalendrQuoteEntry {
-        CalendrQuoteEntry(date: Date(), quote: allQuotes[0], backgroundStyle: .dark)
+    func placeholder(in context: Context) -> CalXQuoteEntry {
+        CalXQuoteEntry(date: Date(), quote: allQuotes[0], backgroundStyle: .dark)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (CalendrQuoteEntry) -> Void) {
+    func getSnapshot(in context: Context, completion: @escaping (CalXQuoteEntry) -> Void) {
         let now = Date()
-        completion(CalendrQuoteEntry(date: now, quote: allQuotes[quoteIndex(for: now)], backgroundStyle: .dark))
+        completion(CalXQuoteEntry(date: now, quote: allQuotes[quoteIndex(for: now)], backgroundStyle: .dark))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<CalendrQuoteEntry>) -> Void) {
+    func getTimeline(in context: Context, completion: @escaping (Timeline<CalXQuoteEntry>) -> Void) {
         let now = Date()
         // Tạo sẵn 8 entry (24h), mỗi entry cách nhau 3 giờ
-        let entries = (0..<8).map { i -> CalendrQuoteEntry in
+        let entries = (0..<8).map { i -> CalXQuoteEntry in
             let entryDate = Calendar.current.date(byAdding: .hour, value: i * 3, to: now) ?? now
-            return CalendrQuoteEntry(
+            return CalXQuoteEntry(
                 date: entryDate,
                 quote: allQuotes[quoteIndex(for: entryDate)],
                 backgroundStyle: .dark
@@ -236,7 +236,7 @@ struct CalendrQuoteProvider: TimelineProvider {
 // MARK: - Views
 
 private struct SmallQuoteView: View {
-    let entry: CalendrQuoteEntry
+    let entry: CalXQuoteEntry
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -267,7 +267,7 @@ private struct SmallQuoteView: View {
 }
 
 private struct MediumQuoteView: View {
-    let entry: CalendrQuoteEntry
+    let entry: CalXQuoteEntry
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -297,8 +297,8 @@ private struct MediumQuoteView: View {
     }
 }
 
-private struct CalendrQuoteWidgetView: View {
-    let entry: CalendrQuoteEntry
+private struct CalXQuoteWidgetView: View {
+    let entry: CalXQuoteEntry
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
@@ -313,12 +313,12 @@ private struct CalendrQuoteWidgetView: View {
 
 // MARK: - Widget
 
-struct CalendrQuoteWidget: Widget {
-    let kind = "CalendrQuoteWidget"
+struct CalXQuoteWidget: Widget {
+    let kind = "CalXQuoteWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: CalendrQuoteProvider()) { entry in
-            CalendrQuoteWidgetView(entry: entry)
+        StaticConfiguration(kind: kind, provider: CalXQuoteProvider()) { entry in
+            CalXQuoteWidgetView(entry: entry)
                 .clipShape(ContainerRelativeShape())
                 .containerBackground(for: .widget) {
                     WidgetCardBackground(backgroundStyle: entry.backgroundStyle)
@@ -335,8 +335,8 @@ struct CalendrQuoteWidget: Widget {
 // MARK: - Entry Point
 
 @main
-struct CalendrWidgets: WidgetBundle {
+struct CalXWidgets: WidgetBundle {
     var body: some Widget {
-        CalendrQuoteWidget()
+        CalXQuoteWidget()
     }
 }

@@ -105,7 +105,7 @@ private extension MockCalendarServiceProvider {
                         .make(
                             start: time(16, 00),
                             end: time(17, 00),
-                            title: "Update Calendr screenshot 📷",
+                            title: "Update CalX screenshot 📷",
                             calendar: .tasks
                         ),
                         .make(

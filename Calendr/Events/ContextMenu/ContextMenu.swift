@@ -78,7 +78,7 @@ class BaseContextMenuViewModel<Action: ContextMenuAction>: ContextMenuViewModel 
                         let alert = NSAlert()
                         alert.alertStyle = .critical
                         alert.messageText = error.localizedDescription
-                        alert.informativeText = "Make sure Calendr has the right permissions."
+                        alert.informativeText = "Make sure CalX has the right permissions."
                         alert.runModal()
                     }
                 }

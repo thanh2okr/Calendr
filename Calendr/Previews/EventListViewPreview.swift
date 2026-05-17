@@ -42,7 +42,7 @@ struct EventListViewPreview: PreviewProvider {
                         .make(
                             start: .make(hour: 16, minute: 00),
                             end: .make(hour: 17, minute: 00),
-                            title: "Update Calendr screenshot 📷",
+                            title: "Update CalX screenshot 📷",
                             calendar: .make(color: .systemYellow)
                         ),
                         .make(

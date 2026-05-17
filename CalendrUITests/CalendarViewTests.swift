@@ -166,7 +166,7 @@ class CalendarViewTests: UITestCase {
                 "15:30 - 15:50"
             ],
             [
-                "Update Calendr screenshot 📷",
+                "Update CalX screenshot 📷",
                 "16:00 - 17:00"
             ],
             [
