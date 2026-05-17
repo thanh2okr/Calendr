@@ -316,24 +316,35 @@ struct CalXQuoteProvider: AppIntentTimelineProvider {
         CalXQuoteEntry(date: Date(), quote: allQuotes[0], backgroundStyle: .dark, frequency: .daily)
     }
 
+    /// Ưu tiên giá trị từ CalX Settings (UserDefaults.standard của main app,
+    /// đọc qua suiteName = bundle ID — cùng file .plist trên macOS).
+    /// Fallback về AppIntent nếu chưa set.
+    private func resolvedFrequency(from configuration: CalXQuoteIntent) -> QuoteFrequency {
+        let mainAppDefaults = UserDefaults(suiteName: "br.paker.CalX")
+        if let raw = mainAppDefaults?.string(forKey: "widget_quote_frequency"),
+           let freq = QuoteFrequency(rawValue: raw) {
+            return freq
+        }
+        return configuration.frequency
+    }
+
     func snapshot(for configuration: CalXQuoteIntent, in context: Context) async -> CalXQuoteEntry {
-        let now = Date()
+        let now  = Date()
+        let freq = resolvedFrequency(from: configuration)
         return CalXQuoteEntry(
             date: now,
-            quote: allQuotes[quoteIndex(for: now, frequency: configuration.frequency)],
+            quote: allQuotes[quoteIndex(for: now, frequency: freq)],
             backgroundStyle: .dark,
-            frequency: configuration.frequency
+            frequency: freq
         )
     }
 
     func timeline(for configuration: CalXQuoteIntent, in context: Context) async -> Timeline<CalXQuoteEntry> {
         let now  = Date()
-        let freq = configuration.frequency
+        let freq = resolvedFrequency(from: configuration)
         let cal  = Calendar.current
 
-        // Sinh entries cho 24h tới, bước nhảy = hoursPerSlot
-        let slots = freq.slotsPerDay
-        let entries: [CalXQuoteEntry] = (0..<slots).compactMap { i in
+        let entries: [CalXQuoteEntry] = (0..<freq.slotsPerDay).compactMap { i in
             guard let entryDate = cal.date(byAdding: .hour, value: i * freq.hoursPerSlot, to: now) else { return nil }
             return CalXQuoteEntry(
                 date: entryDate,

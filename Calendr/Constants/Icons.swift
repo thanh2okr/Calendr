@@ -40,6 +40,7 @@ enum Icons {
         static let keyboard = NSImage(systemName: "keyboard")
         static let appearance = NSImage(systemName: "paintbrush")
         static let about = NSImage(systemName: "book")
+        static let widget = NSImage(systemName: "rectangle.3.group")
         static let tooltip = NSImage(systemName: "info.circle")
         static let length_small = NSImage(systemName: "character.textbox")
         static let length_big = NSImage(systemName: "textformat.abc")

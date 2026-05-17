@@ -13,6 +13,7 @@ enum SettingsTab: Int {
     case appearance
     case calendars
     case keyboard
+    case widget
     case about
 }
 
@@ -44,6 +45,7 @@ class SettingsViewController: NSTabViewController, NSWindowDelegate {
             viewController: CalendarPickerViewController(viewModel: calendarsViewModel, configuration: .settings)
         )
         let keyboard = NSTabViewItem(viewController: KeyboardViewController())
+        let widget = NSTabViewItem(viewController: WidgetSettingsViewController())
         let about = NSTabViewItem(viewController: AboutViewController(autoUpdater: autoUpdater))
 
         general.label = Strings.Settings.Tab.general
@@ -58,10 +60,13 @@ class SettingsViewController: NSTabViewController, NSWindowDelegate {
         keyboard.label = Strings.Settings.Tab.keyboard
         keyboard.image = Icons.Settings.keyboard
 
+        widget.label = "Widget"
+        widget.image = Icons.Settings.widget
+
         about.label = Strings.Settings.Tab.about
         about.image = Icons.Settings.about
 
-        tabViewItems = [general, appearance, calendars, keyboard, about]
+        tabViewItems = [general, appearance, calendars, keyboard, widget, about]
 
         setUpAccessibility()
 
