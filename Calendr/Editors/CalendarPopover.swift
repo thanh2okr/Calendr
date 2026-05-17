@@ -122,22 +122,9 @@ struct CalendarPopover: View {
             .animation(.easeInOut(duration: 0.2), value: displayedMonth)
             .clipped()
 
-            // ── "Hôm nay" button ─────────────────────────────────────
-            HStack {
-                Spacer()
-                Button("Hôm nay") {
-                    let today = Date.now
-                    selection = mergeDate(today, withTimeFrom: selection)
-                    displayedMonth = Self.startOfMonth(for: today)
-                    onClose()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Color.accentColor)
-            }
         }
-        .padding(6)
-        .frame(width: 236)
+        .padding(14)
+        .frame(width: 248)
     }
 
     // MARK: - Helpers
