@@ -114,7 +114,7 @@ struct TimePopover: View {
             }
         }
         .padding(14)
-        .frame(width: 172)
+        .frame(width: 128)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
