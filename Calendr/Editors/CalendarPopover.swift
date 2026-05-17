@@ -30,7 +30,8 @@ struct CalendarPopover: View {
         return cal.date(from: comps) ?? date
     }
 
-    private var cal: Calendar { Calendar.current }
+    private let cal = Calendar.current
+    @State private var slideForward = true
 
     private var monthTitle: String {
         let comps = cal.dateComponents([.month, .year], from: displayedMonth)
@@ -92,7 +93,7 @@ struct CalendarPopover: View {
                 }
             }
 
-            // ── Day grid ─────────────────────────────────────────────
+            // ── Day grid (slide animation on month change) ───────────
             LazyVGrid(columns: gridColumns, spacing: 1) {
                 ForEach(gridDays) { item in
                     let isSelected  = cal.isDate(item.date, inSameDayAs: selection)
@@ -113,6 +114,13 @@ struct CalendarPopover: View {
                     }
                 }
             }
+            .id(displayedMonth)
+            .transition(.asymmetric(
+                insertion: .move(edge: slideForward ? .trailing : .leading).combined(with: .opacity),
+                removal:   .move(edge: slideForward ? .leading  : .trailing).combined(with: .opacity)
+            ))
+            .animation(.easeInOut(duration: 0.2), value: displayedMonth)
+            .clipped()
 
             // ── "Hôm nay" button ─────────────────────────────────────
             HStack {
@@ -146,11 +154,17 @@ struct CalendarPopover: View {
     }
 
     private func prevMonth() {
-        displayedMonth = cal.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
+        slideForward = false
+        withAnimation(.easeInOut(duration: 0.2)) {
+            displayedMonth = cal.date(byAdding: .month, value: -1, to: displayedMonth) ?? displayedMonth
+        }
     }
 
     private func nextMonth() {
-        displayedMonth = cal.date(byAdding: .month, value:  1, to: displayedMonth) ?? displayedMonth
+        slideForward = true
+        withAnimation(.easeInOut(duration: 0.2)) {
+            displayedMonth = cal.date(byAdding: .month, value: 1, to: displayedMonth) ?? displayedMonth
+        }
     }
 
     // Keep the time from `timeSrc` while using the date part of `dateTarget`

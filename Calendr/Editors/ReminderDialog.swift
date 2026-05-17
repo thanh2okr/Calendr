@@ -145,7 +145,7 @@ struct ReminderDialog: View {
             } else {
                 DateRow(label: "Bắt đầu", date: $startDate, allDay: $allDay, showAllDay: true)
                 Divider()
-                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate)
+                DateRow(label: "Kết thúc", date: $endDate, allDay: $allDay, minDate: startDate, referenceDate: startDate)
             }
 
             Divider()
@@ -216,6 +216,7 @@ private struct DateRow: View {
     @Binding var date: Date
     @Binding var allDay: Bool
     var minDate: Date? = nil
+    var referenceDate: Date? = nil   // truyền vào TimePopover để hiện duration label
     var showAllDay: Bool = false
 
     @State private var showCalendar = false
@@ -270,7 +271,7 @@ private struct DateRow: View {
                 .buttonStyle(.plain)
                 .fixedSize()
                 .popover(isPresented: $showTimePicker, arrowEdge: .bottom) {
-                    TimePopover(selection: timeStringBinding) {
+                    TimePopover(selection: timeStringBinding, referenceDate: referenceDate) {
                         showTimePicker = false
                     }
                 }

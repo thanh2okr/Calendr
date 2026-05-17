@@ -8,12 +8,15 @@ import SwiftUI
 struct TimePopover: View {
 
     @Binding var selection: String  // "HH:mm"
+    var referenceDate: Date? = nil  // nếu có → hiện duration label ở mỗi slot
     var onClose: () -> Void
 
     // draft starts EMPTY so list shows all 48 slots on open (not filtered)
     @State private var draft: String = ""
     @State private var hoveredSlot: String? = nil
     @FocusState private var focused: Bool
+
+    private let cal = Calendar.current
 
     private static let allSlots: [String] = (0 ..< 48).map { i in
         String(format: "%02d:%02d", i / 2, (i % 2) * 30)
@@ -79,9 +82,12 @@ struct TimePopover: View {
                     }
                 }
                 .onChange(of: draft) { _, _ in
-                    if let first = filteredSlots.first {
-                        proxy.scrollTo(first, anchor: .top)
-                    }
+                    // Only scroll when filter is actually active (draft non-empty)
+                    guard !draft.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                    let slots = filteredSlots
+                    guard let first = slots.first else { return }
+                    let anchor: UnitPoint = slots.count == 1 ? .center : .top
+                    proxy.scrollTo(first, anchor: anchor)
                 }
             }
         }
@@ -97,27 +103,54 @@ struct TimePopover: View {
     private func slotRow(_ slot: String) -> some View {
         let isSelected = slot == selection
         let isHovered  = hoveredSlot == slot && !isSelected
+        let dur        = durationLabel(for: slot)
 
         Button {
             selection = slot
             onClose()
         } label: {
-            Text(slot)
-                .font(.system(size: 11.5, weight: isSelected ? .bold : .regular, design: .monospaced))
-                .foregroundStyle(isSelected ? Color.white : Color.primary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(
-                            isSelected ? Color.accentColor
-                            : isHovered ? Color.gray.opacity(0.1)
-                            : Color.clear
-                        )
-                )
+            HStack(spacing: 0) {
+                Text(slot)
+                    .font(.system(size: 11.5, weight: isSelected ? .bold : .regular, design: .monospaced))
+                    .foregroundStyle(isSelected ? Color.white : Color.primary)
+                    .frame(maxWidth: .infinity, alignment: dur == nil ? .center : .leading)
+                    .padding(.leading, dur == nil ? 0 : 10)
+
+                if let dur {
+                    Text(dur)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(isSelected ? Color.white.opacity(0.7) : Color.secondary)
+                        .padding(.trailing, 8)
+                }
+            }
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(
+                        isSelected ? Color.accentColor
+                        : isHovered ? Color.gray.opacity(0.1)
+                        : Color.clear
+                    )
+            )
         }
         .buttonStyle(.plain)
         .onHover { over in hoveredSlot = over ? slot : nil }
+    }
+
+    // "1g", "30'", "1g30'" — tính từ referenceDate đến slot (same calendar day)
+    private func durationLabel(for slot: String) -> String? {
+        guard let ref = referenceDate else { return nil }
+        let parts = slot.components(separatedBy: ":")
+        guard parts.count == 2, let h = Int(parts[0]), let m = Int(parts[1]) else { return nil }
+        var comps = cal.dateComponents([.year, .month, .day], from: ref)
+        comps.hour = h; comps.minute = m; comps.second = 0
+        guard let slotDate = cal.date(from: comps) else { return nil }
+        let totalMins = Int(slotDate.timeIntervalSince(ref) / 60)
+        guard totalMins > 0 else { return nil }
+        let hh = totalMins / 60, mm = totalMins % 60
+        if hh == 0 { return "\(mm)'" }
+        if mm == 0 { return "\(hh)g" }
+        return "\(hh)g\(mm)'"
     }
 
     // MARK: - Commit
