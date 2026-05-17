@@ -41,7 +41,7 @@ class CalendarViewModel {
 
         let dateFormatterObservable = calendarUpdated
             .map { calendar in
-                DateFormatter(format: "MMM yyyy", calendar: calendar).with(context: .beginningOfSentence)
+                DateFormatter(format: "'Tháng' M yyyy", calendar: calendar)
             }
             .share(replay: 1)
 
