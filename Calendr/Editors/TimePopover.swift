@@ -113,8 +113,8 @@ struct TimePopover: View {
                 .onChange(of: minuteDraft) { _, _ in scrollToFirst(proxy: proxy) }
             }
         }
-        .padding(6)
-        .frame(width: 152)
+        .padding(14)
+        .frame(width: 172)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
@@ -260,14 +260,14 @@ private struct SlotRowView: View {
         Button(action: onTap) {
             HStack(spacing: 0) {
                 Text(slot)
-                    .font(.system(size: 12, weight: isSelected ? .bold : .regular, design: .monospaced))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.white : Color.primary)
                     .frame(maxWidth: .infinity, alignment: durationLabel == nil ? .center : .leading)
                     .padding(.leading, durationLabel == nil ? 0 : 10)
 
                 if let dur = durationLabel {
                     Text(dur)
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(.system(size: 11))
                         .foregroundStyle(isSelected ? Color.white.opacity(0.7) : Color.secondary)
                         .padding(.trailing, 8)
                 }
