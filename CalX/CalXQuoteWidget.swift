@@ -329,29 +329,32 @@ private struct SmallQuoteView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        ZStack(alignment: .topLeading) {
+            // Dấu " ghim cố định góc top-left
             Text("\u{201C}")
                 .font(.system(size: 34, weight: .black, design: .serif))
                 .foregroundColor(.white.opacity(0.20))
-                .frame(height: 22, alignment: .top)
-                .clipped()
+                .padding(.top, 14)
+                .padding(.leading, 14)
 
-            Text(entry.quote.text)
-                .font(.system(size: fontSize, weight: .semibold))
-                .foregroundColor(.white.opacity(0.92))
-                .lineLimit(2...3)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Quote + author căn giữa dọc độc lập
+            VStack(alignment: .leading, spacing: 8) {
+                Text(entry.quote.text)
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.92))
+                    .lineLimit(2...3)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("— \(entry.quote.author)")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.white.opacity(0.40))
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text("— \(entry.quote.author)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white.opacity(0.40))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
-        .padding(.top, 28)
-        .padding([.leading, .trailing, .bottom], 14)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
@@ -367,29 +370,32 @@ private struct MediumQuoteView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        ZStack(alignment: .topLeading) {
+            // Dấu " ghim cố định góc top-left
             Text("\u{201C}")
                 .font(.system(size: 48, weight: .black, design: .serif))
                 .foregroundColor(.white.opacity(0.18))
-                .frame(height: 30, alignment: .top)
-                .clipped()
+                .padding(.top, 14)
+                .padding(.leading, 18)
 
-            Text(entry.quote.text)
-                .font(.system(size: fontSize, weight: .semibold))
-                .foregroundColor(.white.opacity(0.94))
-                .lineLimit(2...3)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Quote + author căn giữa dọc độc lập
+            VStack(alignment: .leading, spacing: 10) {
+                Text(entry.quote.text)
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.94))
+                    .lineLimit(2...3)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("— \(entry.quote.author)")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.white.opacity(0.40))
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text("— \(entry.quote.author)")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.40))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         }
-        .padding(.top, 28)
-        .padding([.leading, .trailing, .bottom], 18)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
